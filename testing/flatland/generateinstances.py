@@ -116,6 +116,7 @@ def main():
             warnings.filterwarnings("ignore")
             
             filename = "ex" + str(i)
+            print("generating " + dirname + filename)
             env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
                 pickle.dump(env, file)
