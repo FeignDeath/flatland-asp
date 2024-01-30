@@ -94,9 +94,9 @@ def parse():
     parser.add_argument('--timeout', '-t', metavar='N', type=int,
                         help='Time allocated to each instance', required=True)
     parser.add_argument('--instances', '-i', metavar='<path>',
-                        help='Directory of the instances', default="asp/instances/", required=False)
+                        help='Directory of the instances', default="testing/cornercases/instances/", required=False)
     parser.add_argument('--solutions', '-s', metavar='<path>',
-                        help='Directory of the solutions', default="asp/solutions/", required=False)
+                        help='Directory of the solutions', default="testing/cornercases/solutions/", required=False)
     parser.add_argument('--clingo', '-c', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
     parser.add_argument('--optimize', '-opt', action='store_const', const=True,

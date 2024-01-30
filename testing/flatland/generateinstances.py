@@ -1,20 +1,11 @@
 # imports
 # basic
-import numpy as np
+import warnings
 from flatland.envs.rail_env import RailEnv
-# for rendering
-import PIL
-from flatland.utils.rendertools import RenderTool
-from IPython.display import clear_output
-# for plotting
-import matplotlib.pyplot as plt
 # for running clingo
-import json
-import subprocess
 import os
 import pickle
 import argparse
-import shutil
 import sys
 
 # get global transitions
@@ -99,6 +90,10 @@ def parse():
         raise IOError("directory %s not found!" % args.objects)
     if not os.path.isdir(args.facts):
         raise IOError("directory %s not found!" % args.facts)
+    if args.width < 20:
+        raise IOError("width %s is less than 20!" % args.width)
+    if args.height < 24:
+        raise IOError("height %s is less than 24!" % args.height)
     if args.objects[-1] != "/":
         args.objects+="/"
     if args.facts[-1] != "/":
@@ -118,6 +113,8 @@ def main():
             os.mkdir(args.facts + dirname)
         
         for i in range(0,args.number):
+            warnings.filterwarnings("ignore")
+            
             filename = "ex" + str(i)
             env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
