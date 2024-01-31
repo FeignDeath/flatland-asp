@@ -1,6 +1,6 @@
 % goal constraint
 % this goal only checks if the goal is reached in the given horizon it doesn not check whether a train reaches his goal in time
-goal(A) :- state(A,P,_,_), target(A,P,_).
+goal(A) :- state(A,P,T',_), T'<T, target(A,P,T).
 :- agent(A), not goal(A).
 
 % collision forbidance constraint
