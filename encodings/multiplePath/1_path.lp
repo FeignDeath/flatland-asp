@@ -4,3 +4,6 @@ state(A,P,T+2,D) :- initialstate(A,P,_,D), starttime(A,T).
 
 
 1 {state(A,(X+N*X',Y+N*Y'),T+1,D2): movement((X',Y'),D2), transition((X,Y),(D1,D2)), N=0..1} 1 :- state(A,(X,Y),T,D1), time(T+1), not target(A,(X,Y),_).
+
+% after a turn while standing there needs to be at least one move
+:- state(A,P,T,D), state(A,P,T+1,D'), D!=D', state(A,P',T+2,_), P==P.
