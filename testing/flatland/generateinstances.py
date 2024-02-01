@@ -115,7 +115,7 @@ def main():
         for i in range(0,args.number):
             warnings.filterwarnings("ignore")
             
-            filename = "ex" + str(i)
+            filename = "ex" + f"{i:02d}"
             print("generating " + dirname + filename)
             env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
