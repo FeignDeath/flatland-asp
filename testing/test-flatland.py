@@ -33,6 +33,7 @@ def get_orders(input, encoding,timeout):
         return None
 
     if data is not None:
+        if not data["Call"][0].get("Witnesses",[]): return "unsat"
         # Extract the "Value" field
         values = data["Call"][0]["Witnesses"][0]["Value"]
 
@@ -87,8 +88,11 @@ def test(args):
             orders = get_orders(filepath, args.encoding, args.timeout)
             end_time = time.time()
             
-            if orders == None:
-                print(" timeout")
+            if orders == None or orders == "unsat":
+                if orders == None:
+                    print(" timeout")
+                else:
+                    print(" unsat  ")
                 success = False
                 
             else:
