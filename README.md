@@ -1,3 +1,5 @@
+This repository has the goal of converting maps from the [Flatland Challenge](https://www.aicrowd.com/challenges/flatland-3) into sets of facts. Those sets are then solved via ASP, specifically Clingo and later on reimported into flatland and checked for workability.
+
 # Testing corner cases
 To check the basic functionality of the encoding I wrote some test cases, the encoding needs to pass or fail according to the requirements. After checking manually, whether the results are the expected ones for of my encodings and used it to generate the solutions via the following bash script:
 
