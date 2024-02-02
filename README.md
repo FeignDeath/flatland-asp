@@ -42,3 +42,4 @@ python testing/test-flatland.py -e encodings/multipleActions/combined.lp
 - e specifies the encoding to be tested
 - per default the script specifies 'testing/flatland/objects' as the directory for the flatland map objects and 'testing/flatland/facts' as the directory for the facts, both can be specified via -o and -f
 - facts and objects need same structure within their folders
+- unsat results might be unsolvable

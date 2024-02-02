@@ -91,9 +91,9 @@ def test(args):
             if orders == None or orders == "unsat":
                 if orders == None:
                     print(" timeout")
+                    success = False
                 else:
                     print(" unsat  ")
-                success = False
                 
             else:
                 flatlandfile = filepath.replace(args.facts, args.objects)
