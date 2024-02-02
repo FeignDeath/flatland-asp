@@ -13,4 +13,3 @@ outputaction(A,T-1,3) :- state(A,_,T-1,D1), state(A,P,T,D2), right(D1,D2), 2 {tr
 :- outputaction(A,T,O1), outputaction(A,T,O2), O1!=O2.
 
 #show outputaction/3.
-% #show state/4.

@@ -10,7 +10,7 @@ Goals:
 ```
 for file in instances/*.lp; do
     base_name=$(basename "$file" .lp)
-    clingo "$file" ../../encodings/multiplePath+/ -n 0 --outf=2 > "solutions/${base_name}.json"
+    clingo "$file" ../../encodings/multiplePath/combined.lp -n 0 --outf=2 > "solutions/${base_name}.json"
 done
 ```
 

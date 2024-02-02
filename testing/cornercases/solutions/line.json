@@ -1,14 +1,14 @@
 {
   "Solver": "clingo version 5.6.2",
   "Input": [
-    "instances/line.lp","../../encodings/multiplePath+/basic.lp"
+    "instances/line.lp","../../encodings/multiplePath/combined.lp"
   ],
   "Call": [
     {
       "Witnesses": [
         {
           "Value": [
-            "action(0,1,2)"
+            "outputaction(0,1,2)"
           ]
         }
       ]
