@@ -75,7 +75,7 @@ def test(args):
             else:
                 result = "error\n"
                 error = e
-        message += "$"+instance+ ": "
+        message += instance + " "
         if result:
             message += result
             if error:

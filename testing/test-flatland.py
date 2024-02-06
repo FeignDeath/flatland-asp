@@ -80,6 +80,7 @@ def run_orders(env, orders):
 def test(args):
     success = True
     fileList = []
+    timeList = []
     for root, dirs, files in os.walk(args.facts):
         for file in files:
             fileList.append(os.path.join(root, file))
@@ -104,12 +105,20 @@ def test(args):
                 object = pickle.load(f)
                 warnings.filterwarnings("ignore")
                 object.reset()
+                timeTaken = (end_time-start_time)*1000
+                timeList.append(timeTaken)
                 if run_orders(object, orders):
-                    print(" success in " + str((end_time-start_time)*1000)[:7] + " ms")
+                    print(" success in " + str(timeTaken)[:7] + " ms")
                 else:
                     success = False
-                    print(" failure in " + str((end_time-start_time)*1000)[:7] + " ms")
-    return success
+                    print(" failure in " + str(timeTaken)[:7] + " ms")
+
+    if len(timeList) != 0:
+        average = sum(timeList) / len(timeList)
+    else:
+        average = False
+
+    return success, average
 
 
 def parse():
@@ -146,11 +155,13 @@ def main():
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
     try:
         args=parse()
-        success = test(args)
+        success, average = test(args)
         if success:
             sys.stdout.write("SUCCESS\n")
         else:
             sys.stdout.write("FAILURE\n")
+        if average:
+            sys.stdout.write("Average time: " + str(average)[:7] + " ms (for satisfiable instances)\n")
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
         return 1
