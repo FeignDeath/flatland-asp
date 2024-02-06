@@ -17,7 +17,7 @@ done
 - auto checking via:
 - currently has errors
 ```
-python testing/test.py -e encodings/multiplePath+/combined.lp -i testing/cornercases/instances/ -s testing/cornercases/solutions/ -t 100
+python testing/test-cornercases.py -e encodings/multiplePath+/combined.lp -i testing/cornercases/instances/ -s testing/cornercases/solutions/ -t 100
 ```
 - e is the path of the encoding
 - i the path of the instances for testing
