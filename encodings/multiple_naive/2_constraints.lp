@@ -42,6 +42,7 @@
 % dissallowed if standing
 :- order(A,T,4), state(A,_,T,_,"False").
 
-
 % collision forbidance
-:- T11==T22, state(A1,P,T1,_,_), speed(A1,S1), state(A2,P,T2,_,_), speed(A2,S2), A1!=A2, T1<=T11<T1+S1+2, T2<=T22<T2+S2+2, time(T11), time(T22).
+:- state(A1,P,T,_,_), state(A2,P,T,_,_), A1<A2.
+% no swapping
+:- state(A1,P1,T,_,_), state(A1,P2,T+1,_,_), state(A2,P2,T,_,_), state(A2,P1,T+1,_,_), A1<A2.
