@@ -1,11 +1,12 @@
-% transforming the extracted atoms
-
 % allowed timesteps limited by latest arrival time
-time(T) :- target(_,_,T).
+time(T) :- T>=X : target(_,_,X); target(_,_,T).
 time(T) :- time(T+1), T>=0.
 
 % agents
 agent(A) :- initialstate(A,_,_,_).
+
+% available orders
+order(1..4).
 
 % directions after movement
 movement((1,0),"S").movement((-1,0),"N").movement((0,1),"E").movement((0,-1),"W").

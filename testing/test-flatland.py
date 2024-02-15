@@ -79,35 +79,46 @@ def run_orders(env, orders):
 
 def test(args):
     success = True
+    fileList = []
+    timeList = []
     for root, dirs, files in os.walk(args.facts):
-        files.sort()
         for file in files:
-            filepath = os.path.join(root, file)
-            print(filepath.replace(args.facts, ""), end="")
-            start_time = time.time()
-            orders = get_orders(filepath, args.encoding, args.timeout)
-            end_time = time.time()
-            
-            if orders == None or orders == "unsat":
-                if orders == None:
-                    print(" timeout")
-                    success = False
-                else:
-                    print(" unsat  ")
-                
+            fileList.append(os.path.join(root, file))
+    fileList.sort()
+    for filepath in fileList:
+        print(filepath.replace(args.facts, ""), end="")
+        start_time = time.time()
+        orders = get_orders(filepath, args.encoding, args.timeout)
+        end_time = time.time()
+        
+        if orders == None or orders == "unsat":
+            if orders == None:
+                print(" timeout")
+                success = False
             else:
-                flatlandfile = filepath.replace(args.facts, args.objects)
-                flatlandfile = flatlandfile.replace(".lp", ".pkl")
-                with open(flatlandfile, "rb") as f:
-                    object = pickle.load(f)
-                    warnings.filterwarnings("ignore")
-                    object.reset()
-                    if run_orders(object, orders):
-                        print(" success in " + str((end_time-start_time)*1000)[:7] + " ms")
-                    else:
-                        success = False
-                        print(" failure in " + str((end_time-start_time)*1000)[:7] + " ms")
-    return success
+                print(" unsat  ")
+            
+        else:
+            flatlandfile = filepath.replace(args.facts, args.objects)
+            flatlandfile = flatlandfile.replace(".lp", ".pkl")
+            with open(flatlandfile, "rb") as f:
+                object = pickle.load(f)
+                warnings.filterwarnings("ignore")
+                object.reset()
+                timeTaken = (end_time-start_time)*1000
+                timeList.append(timeTaken)
+                if run_orders(object, orders):
+                    print(" success in " + str(timeTaken)[:7] + " ms")
+                else:
+                    success = False
+                    print(" failure in " + str(timeTaken)[:7] + " ms")
+
+    if len(timeList) != 0:
+        average = sum(timeList) / len(timeList)
+    else:
+        average = False
+
+    return success, average
 
 
 def parse():
@@ -144,11 +155,13 @@ def main():
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
     try:
         args=parse()
-        success = test(args)
+        success, average = test(args)
         if success:
             sys.stdout.write("SUCCESS\n")
         else:
             sys.stdout.write("FAILURE\n")
+        if average:
+            sys.stdout.write("Average time: " + str(average)[:7] + " ms (for satisfiable instances)\n")
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
         return 1
