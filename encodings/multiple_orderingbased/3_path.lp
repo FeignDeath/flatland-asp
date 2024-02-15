@@ -1,5 +1,3 @@
-time(0..T) :- T == {ordering(_,_)}.
-
 state(A,"Start",T) :- initialstate(A,_,T,_).
 1 {state(A,U,T); state(A,V,T)} 1 :- state(A,U,T-1), allmove(A,U,V), V!="End", time(T).
 :- state(A,"Start",T-2), state(A,(P,D),T-1), not state(A,(P,D),T).
