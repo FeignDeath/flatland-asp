@@ -1,5 +1,5 @@
 start(A,(P,D)) :- initialstate(A,P,_,D).
-initialmove(A,"Nowhere",(P,D)) :- initialstate(A,P,_,D).
+initialmove(A,"Start",(P,D)) :- initialstate(A,P,_,D).
 goal(A,P) :- target(A,P,_).
 
 vertex((P,D)) :- transition(P,(D,_)).
@@ -14,3 +14,5 @@ edge(((X,Y),D1),((X+X',Y+Y'),D2)) :- transition((X,Y),(D1,D2)), movement((X',Y')
 
 :- start(A,(P,U)), not goal(A,P), not move(A,(P,U),_).
 :- goal(A,P), not start(A,(P,_)), not move(A,_,(P,_)).
+
+finalmove(A,U,"End") :- move(A,_,U), not move(A,U,_).
