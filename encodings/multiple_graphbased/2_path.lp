@@ -1,9 +1,11 @@
-1 {starttime(A,T'): time(T'), T'>0, T'>=T, time(T'+2)} 1 :- initialstate(A,_,T,_).
-state(A,P,T+1,D) :- initialstate(A,P,_,D), starttime(A,T).
-state(A,P,T+2,D) :- initialstate(A,P,_,D), starttime(A,T).
+% spawning of the train
+1 {starttime(A,T'): time(T'), T'>0, T'>=T, time(T'+2)} 1 :- initialstate(A,_,T).
+state(A,V,T+1) :- initialstate(A,V,_), starttime(A,T).
+state(A,V,T+2) :- initialstate(A,V,_), starttime(A,T).
 
-
-{state(A,(X+X',Y+Y'),T+1,D2): movement((X',Y'),D2), transition((X,Y),(D1,D2))} :- state(A,(X,Y),T,D1), time(T+1), not target(A,(X,Y),_).
-
-{state(A,(X,Y),T+1,D)} :- state(A,(X,Y),T,D), time(T+1), not target(A,(X,Y),_).
-:- 2 {state(A,_,T,_)}, agent(A), time(T).
+% moving
+{state(A,V,T) : edge((P,D),V)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
+% staying
+{state(A,(P,D),T)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
+% only agent at each timestep
+:- 2 {state(A,_,T)}, agent(A), time(T).
