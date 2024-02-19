@@ -37,7 +37,7 @@ def get_agents(agent):
     # T - time til earliest departure
     # D - direction "N", "E", "S" or "W"
     directions = {0:"\"N\"", 1:"\"E\"", 2:"\"S\"", 3:"\"W\""}
-    initialstate = "initialstate(" + str(agent.handle) + ", " + str(agent.initial_position) + ", " + str(agent.earliest_departure) + ", " + str(directions[agent.direction]) + ")"
+    initialstate = "initialstate(" + str(agent.handle) + ", (" + str(agent.initial_position) + ", " + str(directions[agent.direction]) + "), " + str(agent.earliest_departure) + ")"
     atoms.append(initialstate)
 
     # target(A,(X,Y),T)

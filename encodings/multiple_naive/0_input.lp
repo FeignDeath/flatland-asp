@@ -1,3 +1,5 @@
+initialstate(A,P,T,D) :- initialstate(A,(P,D),T).
+
 % allowed timesteps limited by latest arrival time
 time(T) :- T>=X : target(_,_,X); target(_,_,T).
 time(T) :- time(T+1), T>=0.

@@ -1,4 +1,5 @@
 % transforming the extracted atoms
+initialstate(A,P,T,D) :- initialstate(A,(P,D),T).
 
 % allowed timesteps limited by latest arrival time
 time(T) :- target(_,_,T).
