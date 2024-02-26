@@ -1,7 +1,7 @@
 % transforming the extracted atoms
 
 % allowed timesteps limited by latest arrival time
-time(T-3) :- target(_,_,T).
+time(T) :- target(_,_,T).
 time(T) :- time(T+1), T>=0.
 
 % agents
