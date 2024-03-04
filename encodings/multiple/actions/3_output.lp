@@ -1,18 +1,20 @@
-% output needs to be swapped
+%% converting the atoms for the import into flatland
 
-% startorder (not shifted)
-outputaction(A,T,2) :- starttime(A,T).
+% startorder
+outputaction(A,2,T) :- starttime(A,T).
 
-% only first stop and shifted
-outputaction(A,T-1,4) :- action(A,4,T), not action(A,4,T-1).
+% all orders except the startorder are shifted as flatland has a delay of 1
+% only the first wait in a row is necessary as the train waits until another action is given
+outputaction(A,4,T) :- action(A,4,T+1), not action(A,4,T).
 
-% only carry on if stopped before and shifted
-outputaction(A,T-1,1) :- action(A,1,T), action(A,4,T-1).
-outputaction(A,T-1,2) :- action(A,2,T), action(A,4,T-1).
-outputaction(A,T-1,3) :- action(A,3,T), action(A,4,T-1).
+% actions 1 and 3 (left and right turns) are only necessary, if multiple options exist otherwise the trains follows the rails
+outputaction(A,1,T) :- action(A,1,T+1), state(A,(P,D),T+1), 2 {transition(P,(D,_))}.
+outputaction(A,3,T) :- action(A,3,T+1), state(A,(P,D),T+1), 2 {transition(P,(D,_))}.
 
-% else shifted and only if necessary
-outputaction(A,T-1,1) :- action(A,1,T), state(A,P,T,D), 2 {transition(P,(D,_))}.
-outputaction(A,T-1,3) :- action(A,3,T), state(A,P,T,D), 2 {transition(P,(D,_))}.
+% if the train carries on after stopping an order to continue is given
+% it might be that the train continues and should pick a left turn where multiple options are given,
+% in that case an action is already provided by the lines above which also serve to continue
+outputaction(A,2,T) :- action(A,2,T+1), action(A,4,T), not action(A,1,T+1), not action(A,3,T+1).
+
 
 #show outputaction/3.

@@ -44,15 +44,15 @@ def get_orders(input, encoding,timeout):
         for value in values:
             parts = value.split(",")
             x = int(parts[0].split("(")[1])
-            t = int(parts[1])
-            d = parts[2].strip(")\"")
+            a = int(parts[1])
+            t = int(parts[2].strip(")\""))
 
             # Create a dictionary for x if it doesn't exist
             if x not in dictionaries:
                 dictionaries[x] = {}
 
             # Add the corresponding d to the dictionary with t as the key
-            dictionaries[x][t] = d
+            dictionaries[x][t] = a
 
         return dictionaries
 
