@@ -1,4 +1,4 @@
-% start vertex at ealiest possible timestep
+% start vertex at earliest possible timestep
 state(A,"Start",T) :- T = #max{T': initialstate(A,_,T'); 1}, agent(A).
 
 % if there a conflict ahead where a has to wait, a waits until all agents in conflict have passed
