@@ -1,4 +1,4 @@
-%% ensuring the path reaches the goal and avoids conflicts
+%% ensuring the path reaches the goal and conflicts are forbidden
 
 % the goal must be reached
 goal(A) :- state(A,(P,_),T'), T'<=T, target(A,P,T).

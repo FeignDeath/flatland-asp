@@ -1,22 +1,25 @@
-% output needs to be swapped
+%% converting the atoms for the import into flatland
 
-% startorder (not shifted)
-outputaction(A,T,2) :- starttime(A,T).
+% startorder
+outputaction(A,2,T) :- starttime(A,T).
 
-% first stop to hinder auto accelerating
-outputaction(A,T,4) :- not state(A,_,T-1), state(A,V,T), state(A,V,T+2).
+% all orders except the startorder are shifted as flatland has a delay of 1
+% if an agent stays at the same vertex for the first time a stop action is generated beforehand
+outputaction(A,4,T) :- state(A,V,T+1), state(A,V,T+2), not state(A,V,T), state(A,_,T).
 
-% only first stop and shifted
-outputaction(A,T,4) :- state(A,V,T+1), state(A,V,T+2), not state(A,V,T), state(A,_,T).
+% if the agent stays longer tha two timesteps at the start a stop action is necessary after spawning
+outputaction(A,4,T) :- not state(A,_,T-1), state(A,V,T), state(A,V,T+2).
 
-% only carry on if stopped before and shifted
-outputaction(A,T,2) :- state(A,V,T), state(A,V,T+1), not state(A,V,T+2),
-    not outputaction(A,T,1), not outputaction(A,T,3),  % left and right turn have same effect and duplicate orders are forbidden
-    not outputaction(A,T-1,2), % only possible via the spawning of train, prevents generation of unnecessary order
+% actions 1 and 3 (left and right turns) are only necessary, if multiple options exist otherwise the trains follows the rails
+outputaction(A,1,T) :- state(A,(P1,D1),T+1), state(A,(_,D2),T+2), left(D1,D2), 2 {edge((P1,D1),_)}.
+outputaction(A,3,T) :- state(A,(P1,D1),T+1), state(A,(_,D2),T+2), right(D1,D2), 2 {edge((P1,D1),_)}.
+
+% if the train carries on after stopping an order to continue is given
+% it might be that the train continues and should pick a left turn where multiple options are given,
+% in that case an action is already provided by the lines above which also serve to continue
+outputaction(A,2,T) :- state(A,V,T), state(A,V,T+1), not state(A,V,T+2),
+    not outputaction(A,1,T), not outputaction(A,3,T),
+    not outputaction(A,2,T-1), % only possible when spawning the train, prevents generation of unnecessary actions
     state(A,_,T+2). % no order necessary if stopped state is the goal state
-
-% left or right if necessary change
-outputaction(A,T,1) :- state(A,(P1,D1),T+1), state(A,(_,D2),T+2), left(D1,D2), 2 {edge((P1,D1),_)}.
-outputaction(A,T,3) :- state(A,(P1,D1),T+1), state(A,(_,D2),T+2), right(D1,D2), 2 {edge((P1,D1),_)}.
 
 #show outputaction/3.

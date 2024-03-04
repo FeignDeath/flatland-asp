@@ -14,7 +14,7 @@ outputaction(A,3,T) :- action(A,3,T+1), state(A,(P,D),T+1), 2 {transition(P,(D,_
 % if the train carries on after stopping an order to continue is given
 % it might be that the train continues and should pick a left turn where multiple options are given,
 % in that case an action is already provided by the lines above which also serve to continue
-outputaction(A,2,T) :- action(A,2,T+1), action(A,4,T), not action(A,1,T+1), not action(A,3,T+1).
+outputaction(A,2,T) :- action(A,1..3,T+1), action(A,4,T), not outputaction(A,1,T), not outputaction(A,3,T).
 
 
 #show outputaction/3.
