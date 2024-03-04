@@ -1,5 +1,5 @@
 % start vertex at ealiest possible timestep
-state(A,"Start",T) :- T = #max{T': initialstate(A,_,T',_); 1}, initialstate(A,_,_,_).
+state(A,"Start",T) :- T = #max{T': initialstate(A,_,T'); 1}, agent(A).
 
 % if there a conflict ahead where a has to wait, a waits until all agents in conflict have passed
 state(A,U,T) :- state(A,U,T-1), allmove(A,U,V), 1 {T<T': state(B,W,T'), ordering((B,W),(A,V))}, U!="End", time(T).

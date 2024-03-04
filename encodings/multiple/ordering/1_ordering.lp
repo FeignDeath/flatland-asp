@@ -1,5 +1,5 @@
-start(A,(P,D)) :- initialstate(A,P,_,D).
-initialmove(A,"Start",(P,D)) :- initialstate(A,P,_,D).
+start(A,(P,D)) :- initialstate(A,(P,D),_).
+initialmove(A,"Start",(P,D)) :- initialstate(A,(P,D),_).
 goal(A,P) :- target(A,P,_).
 
 vertex((P,D)) :- transition(P,(D,_)).
