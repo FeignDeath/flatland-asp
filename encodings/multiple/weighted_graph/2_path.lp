@@ -4,8 +4,8 @@ state(A,V,T+1) :- initialstate(A,V,_), starttime(A,T).
 state(A,V,T+2) :- initialstate(A,V,_), starttime(A,T).
 
 % moving
-{state(A,V,T) : edge((P,D),V)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
+% {state(A,V,T) : edge((P,D),V)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
 % staying
 {state(A,(P,D),T)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
-% only agent at each timestep
-:- 2 {state(A,_,T)}, agent(A), time(T).
+% moving if not staying
+1 {state(A,V,T+N) : edge((P,D),V,N), time(T+N)} 1 :- state(A,(P,D),T), not state(A,(P,D),T+1), not target(A,P,_).
