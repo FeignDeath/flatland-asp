@@ -15,7 +15,7 @@ from flatland.envs.rail_env import TrainState
 # inputs are given as file names
 def get_orders(input, encoding,timeout):
     # Define the command to run
-    command = "clingo " + input + " " + encoding + " --outf=2 | jq '.'"
+    command = "clingo " + input + " " + encoding + " --outf=2 -W none | jq '.'"
 
     # Run the command and capture its output
     try:
@@ -33,9 +33,9 @@ def get_orders(input, encoding,timeout):
         return None
 
     if data is not None:
-        if not data["Call"][0].get("Witnesses",[]): return "unsat"
+        if not data["Call"][-1].get("Witnesses",[]): return "unsat"
         # Extract the "Value" field
-        values = data["Call"][0]["Witnesses"][0]["Value"]
+        values = data["Call"][-1]["Witnesses"][0]["Value"]
 
         # Initialize a dictionary to store the dictionaries
         dictionaries = {}

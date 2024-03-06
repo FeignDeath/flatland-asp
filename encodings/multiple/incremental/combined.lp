@@ -44,6 +44,7 @@ goal(A,t) :- state(A,(P,_),t), t<=T, target(A,P,T).
 
 isTurn(A,t) :- state(A,(P,D1),t-1), state(A,(_,D2),t), D1!=D2, 2 {transition(P,(D1,_))}.
 
+
 #program check(t).
 
 % only one starttime per agent
