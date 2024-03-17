@@ -8,4 +8,6 @@ state(A,V,T+2) :- initialstate(A,V,_), starttime(A,T).
 % staying
 {state(A,(P,D),T)} :- state(A,(P,D),T-1), time(T), not target(A,P,_).
 % moving if not staying
-1 {state(A,V,T+N) : edge((P,D),V,N), time(T+N)} 1 :- state(A,(P,D),T), not state(A,(P,D),T+1), not target(A,P,_).
+1 {state(A,V,T+N) : weighted_edge((P,D),V,N), time(T+N)} 1 :- state(A,(P,D),T), not state(A,(P,D),T+1), not target(A,P,_).
+
+#show state/3.
