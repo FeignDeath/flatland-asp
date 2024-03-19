@@ -6,5 +6,4 @@ goal(A) :- state(A,(P,_),T'), T'<=T, target(A,P,T).
 % collision forbidance constraint
 :- state(A1,(P,_),T), state(A2,(P,_),T), A1<A2.
 % no swapping
-:- state(A1,U,T1), state(A1,V,T2), {T1<T<T2: state(A1,_,T)} 0, weighted_edge(U,V,T2-T1,_), opposed_edge((U,V,T2-T1),(W,X,_)),
-    state(A2,W,TT1), state(A2,X,TT2), {TT1<T<TT2: state(A2,_,T)} 0, T1<=TT1<=T2.
+:- move(A,E,T1), move(B,F,T2), A!=B, opposed_edge(E,F,N), T1<=T2<=T1+N.

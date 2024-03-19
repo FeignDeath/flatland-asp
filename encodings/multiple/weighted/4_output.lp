@@ -8,7 +8,7 @@ outputaction(A,2,T) :- starttime(A,T).
 outputaction(A,4,T) :- state(A,V,T+1), state(A,V,T+2), not state(A,V,T), not initialstate(A,V,_).
 
 % if the agent stays longer than two timesteps at the start a stop action is necessary after spawning
-outputaction(A,4,T) :- not state(A,_,T-1), state(A,V,T), state(A,V,T+2).
+outputaction(A,4,T) :- not state(A,_,T-1), state(A,V,T), state(A,V,T+2), initialstate(A,V,_).
 
 % actions 1 and 3 (left and right turns) are only necessary, if multiple options exist otherwise the trains follows the rails
 % if a move occurs, where multiple moves are possible and the first field is not in the same direction

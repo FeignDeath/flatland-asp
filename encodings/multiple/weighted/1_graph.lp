@@ -14,10 +14,10 @@ remove(U,(P,D),N) :- edge(U,(P,D),N,_,_), {edge((P,_),_)} 2, not initialstate(_,
 % D is the direction of the first stop, and used to extract actions for flatland
 weighted_edge(U,V,N,D) :- edge(U,V,N,(_,D),_), not remove(U,V,N).
 
-opposed_edge((U1,V1,N),(U2,V2,N)) :- edge(U1,V1,N,F1,L1), edge(U2,V2,N,F2,L2),
+opposed_edge((U1,V1,N,D1),(U2,V2,N,D2),N) :- edge(U1,V1,N,F1,L1), edge(U2,V2,N,F2,L2),
     (P11,_) = U1, (P22,_) = V2, P11==P22,
     (P12,_) = V1, (P21,_) = U2, P12==P21,
-    (PF1,_) = F1, (PL2,_) = L2, PF1==PL2,
-    (PL1,_) = L1, (PF2,_) = F2, PL1==PF2.
+    (PF1,D1) = F1, (PL2,_) = L2, PF1==PL2,
+    (PL1,_) = L1, (PF2,D2) = F2, PL1==PF2.
 
 % #show weighted_edge/3.
