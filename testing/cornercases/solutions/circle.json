@@ -1,7 +1,7 @@
 {
   "Solver": "clingo version 5.6.2",
   "Input": [
-    "instances/spawntogether1.lp","../../encodings/multiple/path/combined.lp"
+    "instances/circle.lp","../../encodings/multiple/path/combined.lp"
   ],
   "Call": [
     {
@@ -13,7 +13,7 @@
         },
         {
           "Value": [
-            "outputaction(0,2,3)", "outputaction(1,2,1)"
+            "outputaction(0,2,1)", "outputaction(1,2,2)", "outputaction(1,2,4)", "outputaction(1,4,3)"
           ]
         }
       ]
@@ -26,10 +26,10 @@
   },
   "Calls": 1,
   "Time": {
-    "Total": 0.003,
+    "Total": 0.006,
     "Solve": 0.000,
     "Model": 0.000,
     "Unsat": 0.000,
-    "CPU": 0.003
+    "CPU": 0.006
   }
 }

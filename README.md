@@ -10,12 +10,11 @@ Goals:
 ```
 for file in instances/*.lp; do
     base_name=$(basename "$file" .lp)
-    clingo "$file" ../../encodings/multiple_pathbased/combined.lp -n 0 --outf=2 > "solutions/${base_name}.json"
+    clingo "$file" ../../encodings/multiple/path/combined.lp -n 0 --outf=2 > "solutions/${base_name}.json"
 done
 ```
 
 - auto checking via:
-- currently has errors
 ```
 python testing/test-cornercases.py -e encodings/multiple/path/combined.lp -i testing/cornercases/instances/ -s testing/cornercases/solutions/ -t 100
 ```
@@ -23,6 +22,8 @@ python testing/test-cornercases.py -e encodings/multiple/path/combined.lp -i tes
 - i the path of the instances for testing
 - s is the path of the solutions for the testing
 - t is the maximum time allowed for computing every test
+
+- this test is particularly difficult, since the encodings deliver different answer sets
 
 # Testing flatland
 

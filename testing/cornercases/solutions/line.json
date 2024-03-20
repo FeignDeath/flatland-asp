@@ -1,14 +1,14 @@
 {
   "Solver": "clingo version 5.6.2",
   "Input": [
-    "instances/line.lp","../../encodings/multiplePath/combined.lp"
+    "instances/line.lp","../../encodings/multiple/path/combined.lp"
   ],
   "Call": [
     {
       "Witnesses": [
         {
           "Value": [
-            "outputaction(0,1,2)"
+            "outputaction(0,2,1)"
           ]
         }
       ]
@@ -21,10 +21,10 @@
   },
   "Calls": 1,
   "Time": {
-    "Total": 0.005,
+    "Total": 0.003,
     "Solve": 0.000,
     "Model": 0.000,
     "Unsat": 0.000,
-    "CPU": 0.005
+    "CPU": 0.003
   }
 }
