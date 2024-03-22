@@ -1,4 +1,3 @@
-% output needs to be swapped
 
 % startorder
 outputaction(A,2,T) :- starttime(A,T).
@@ -17,6 +16,6 @@ outputaction(A,3,T) :- state(A,(P,D1),T+1), state(A,(_,D2),T+2), right(D1,D2), 2
 % if the train carries on after stopping an order to continue is given
 % it might be that the train continues and should pick a left turn where multiple options are given,
 % in that case an action is already provided by the lines above which also serve to continue
-outputaction(A,2,T) :- state(A,P,T), state(A,P,T+1), not state(A,P,T+2), not outputaction(A,1,T), not outputaction(A,3,T), not outputaction(A,T-1,2), state(A,_,T+2), state(A,_,T-1).
+outputaction(A,2,T) :- state(A,P,T), state(A,P,T+1), not state(A,P,T+2), not outputaction(A,1,T), not outputaction(A,3,T), not outputaction(A,2,T-1), state(A,_,T+2), state(A,_,T-1).
 
 #show outputaction/3.

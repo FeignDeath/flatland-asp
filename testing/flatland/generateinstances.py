@@ -106,7 +106,7 @@ def main():
     try:
         args=parse()
         
-        dirname = str(args.width) + "x" + str(args.height) + "_" + str(args.agents) + "/"
+        dirname = f"{args.width:03d}" + "x" + f"{args.height:03d}" + "_" + f"{args.agents:03d}" + "/"
         if not os.path.isdir(args.objects + dirname):
             os.mkdir(args.objects + dirname)
         if not os.path.isdir(args.facts + dirname):
