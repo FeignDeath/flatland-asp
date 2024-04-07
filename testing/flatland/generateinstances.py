@@ -56,7 +56,7 @@ def get_agents(agent):
     return(atoms)
 
 # get all atoms combined (agents and transitions)
-def get_facts(env,obs,filename):
+def get_atoms(env,obs,filename):
     # get atoms
     agent_handles = env.get_agent_handles()
     atoms = get_transitions(obs[agent_handles[0]])
@@ -75,9 +75,9 @@ def parse():
     )
     parser.add_argument('--number', '-n', metavar='N', type=int,
                         help='Number of encodings to generate', required=True)
-    parser.add_argument('--width', '-x', metavar='N', type=int,
+    parser.add_argument('--width', '-y', metavar='N', type=int,
                         help='Width of the generated map (minimum 20x24)', required=True)
-    parser.add_argument('--height', '-y', metavar='N', type=int,
+    parser.add_argument('--height', '-x', metavar='N', type=int,
                         help='Height of the generated map (minimum 20x24)', required=True)
     parser.add_argument('--agents', '-a', metavar='N', type=int,
                         help='Number of trains in the encoding', required=True)
@@ -94,6 +94,8 @@ def parse():
         raise IOError("width %s is less than 20!" % args.width)
     if args.height < 24:
         raise IOError("height %s is less than 24!" % args.height)
+    if args.agents < 1:
+        raise IOError("number of agents %s is less than 1!" % args.agents)
     if args.objects[-1] != "/":
         args.objects+="/"
     if args.facts[-1] != "/":
@@ -122,7 +124,7 @@ def main():
                 pickle.dump(env, file)
             
             obs = env.reset()
-            get_facts(env, obs, args.facts + dirname + filename + ".lp")
+            get_atoms(env, obs, args.facts + dirname + filename + ".lp")
         
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))

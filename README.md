@@ -51,3 +51,12 @@ python testing/test-flatland.py -e encodings/multiple/path/combined.lp
 - per default the script specifies 'testing/flatland/objects' as the directory for the flatland map objects and 'testing/flatland/facts' as the directory for the facts, both can be specified via -o and -f
 - facts and objects need same structure within their folders
 - unsat results might be unsolvable
+
+## Benchmarking
+- checks how many random instances can be solved in given time
+```
+python testing/benchmark-flatland.py -e encodings/multiple/grid/combined.lp
+```
+- e specifies the encoding to be tested
+- x, y and a can be specified as arguments
+- t sets timout
