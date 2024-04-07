@@ -72,9 +72,12 @@ def get_atoms(env,obs):
 
 def run_clingo(input, encoding, timeout):
     limit = False
-    command = "clingo tmp.lp " + encoding + " --outf=2 -W none | jq '.'"
+    name = encoding
+    name = "tmp_" + name.replace("/","_") + ".lp"
 
-    with open("tmp.lp", "w") as file:
+    command = "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
+
+    with open(name, "w") as file:
         file.write(input)
 
     # Run the command and capture its output
@@ -84,7 +87,7 @@ def run_clingo(input, encoding, timeout):
         limit = True
     if limit: return "TIMEOUT", None, None
 
-    os.remove("tmp.lp")
+    os.remove(name)
 
     data = json.loads(output)
     if data["Result"] == "SATISFIABLE":
