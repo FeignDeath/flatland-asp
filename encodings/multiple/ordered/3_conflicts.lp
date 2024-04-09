@@ -7,7 +7,7 @@
 :- resolve((A,(P1,D1)),(B,(P1,D3))), move(A,(P1,D1),(P2,D2)), move(B,(P2,D4),(P1,D3)), not resolve((A,(P2,D2)),(B,(P2,D4))).
 
 % simplification when moving in the same direction
-:- resolve((A,U),(B,U)), move(A,U,V), move(B,U,V), not resolve((A,V),(B,V)).
+:- resolve((A,U),(B,U)), move(A,U,V), move(B,U,V), V!="End", not resolve((A,V),(B,V)).
 
 % A needs to be at V, before or at the same time as B may enter W
 ordering((A,V),(B,W)) :- resolve((A,U),(B,W)), move(A,U,V).
