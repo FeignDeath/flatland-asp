@@ -85,15 +85,15 @@ def run_clingo(input, encoding, timeout):
         output = subprocess.check_output(command, shell=True, timeout=timeout).decode('utf-8')
     except subprocess.TimeoutExpired:
         limit = True
-    if limit: return "TIMEOUT", None, None
+    if limit: return "TIMEOUT", None, None, None
 
     os.remove(name)
 
     data = json.loads(output)
     if data["Result"] == "SATISFIABLE":
-        return data["Result"], data["Time"]["Total"], data["Call"][-1]["Witnesses"][0]["Value"]
+        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], data["Call"][-1]["Witnesses"][0]["Value"]
     else:
-        return data["Result"], data["Time"]["Total"], None
+        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], None
 
 
 def facts_to_flatland(atoms):
@@ -137,12 +137,13 @@ def run_orders(env, plan):
 def test(args):
     timeLeft = args.timeout
     l = len(str(timeLeft)) + 3
-    s = 0
-    f = 0
+    sucess = 0
+    failure = 0
+    sumSolving = 0
 
     while True:
 
-        print(f"Sucess: {s}, Failures: {f}, Time left: {timeLeft:{l}.2f}", end="\r")
+        print(f"Sucess: {sucess}, Failures: {failure}, Time left: {timeLeft:{l}.2f}", end="\r")
 
         warnings.filterwarnings("ignore")
         env = None
@@ -150,15 +151,16 @@ def test(args):
         obs = env.reset()
 
         initialAtoms = get_atoms(env, obs)
-        sat, time, atoms = run_clingo(initialAtoms, args.encoding, timeLeft)
+        sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft)
 
-        if sat == "TIMEOUT": return s, f
-        if sat == "UNSATISFIABLE": f += 1
+        if sat == "TIMEOUT": return sucess, failure, sumSolving/args.timeout
+        if sat == "UNSATISFIABLE": failure += 1
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
-            if run_orders(env, plan): s += 1
-            else: f += 1
+            if run_orders(env, plan): sucess += 1
+            else: failure += 1
         
+        sumSolving += timeSolving
         timeLeft = timeLeft - time
 
 
@@ -200,8 +202,8 @@ def main():
     try:
         args=parse()
         sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        s, f = test(args)
-        print(f"Sucess: {s}, Failures: {f}" + " "*(len(str(args.timeout))+16))
+        s, f, sol = test(args)
+        print(f"Sucess: {s}, Failures: {f}, Percentage of Solving Time: {sol*100:3.2f}")
 
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))

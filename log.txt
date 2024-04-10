@@ -1,0 +1,23 @@
+Running 40x40:8 via encodings/basic/combined.lp for 600 seconds 
+Sucess: 1532, Failures: 30960, Percentage of Solving Time: 0.32
+
+Running 40x40:8 via encodings/multiple/naive/combined.lp for 600 seconds 
+Sucess: 0, Failures: 44, Percentage of Solving Time: 27.84
+
+Running 40x40:8 via encodings/multiple/actions/combined.lp for 600 seconds 
+Sucess: 45, Failures: 4, Percentage of Solving Time: 2.66
+
+Running 40x40:8 via encodings/multiple/grid/combined.lp for 600 seconds 
+Sucess: 60, Failures: 2, Percentage of Solving Time: 6.15
+
+Running 40x40:8 via encodings/multiple/incremental/combined.lp for 600 seconds 
+Sucess: 47, Failures: 3, Percentage of Solving Time: 6.63
+
+Running 40x40:8 via encodings/multiple/graph/combined.lp for 600 seconds 
+Sucess: 55, Failures: 3, Percentage of Solving Time: 5.97
+
+Running 40x40:8 via encodings/multiple/weighted/combined.lp for 600 seconds 
+Sucess: 624, Failures: 31, Percentage of Solving Time: 16.05
+
+Running 40x40:8 via encodings/multiple/ordered/combined.lp for 600 seconds 
+Sucess: 89, Failures: 2, Percentage of Solving Time: 11.04

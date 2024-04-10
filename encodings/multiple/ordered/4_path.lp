@@ -1,7 +1,7 @@
 % start vertex at earliest possible timestep
 state(A,"Start",T) :- T = #max{T': initialstate(A,_,T'); 1}, agent(A).
 
-% replaces waiting and cnforming with the ordering
+% replaces waiting and conforming with the ordering
 % reduces grounding but blows up solving, if not combined with same direction simplification in conflicts
 % wait(A,U,T) :- ordering((B,V),(A,U)), state(B,V,T+1).
 % wait(A,U,T) :- wait(A,U,T+1), time(T).
