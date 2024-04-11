@@ -10,10 +10,12 @@ import subprocess
 import sys
 import time
 import warnings
+import multiprocessing
 from flatland.envs.rail_env import TrainState
 
+
 # inputs are given as file names
-def get_orders(input, encoding,timeout):
+def get_orders(input, encoding, timeout):
     # Define the command to run
     command = "clingo " + input + " " + encoding + " --outf=2 -W none | jq '.'"
 
@@ -77,46 +79,56 @@ def run_orders(env, orders):
 
         t += 1
 
-def test(args):
+
+def process_file(filepath, args):
     success = True
+    print(filepath.replace(args.facts, ""), end="")
+    start_time = time.time()
+    orders = get_orders(filepath, args.encoding, args.timeout)
+    end_time = time.time()
+    
+    if orders is None or orders == "unsat":
+        if orders is None:
+            print(" timeout")
+            success = False
+        else:
+            print(" unsat  ")
+        
+    else:
+        flatlandfile = filepath.replace(args.facts, args.objects)
+        flatlandfile = flatlandfile.replace(".lp", ".pkl")
+        with open(flatlandfile, "rb") as f:
+            obj = pickle.load(f)
+            warnings.filterwarnings("ignore")
+            obj.reset()
+            time_taken = (end_time - start_time) * 1000
+            if run_orders(obj, orders):
+                print(" success in " + str(time_taken)[:7] + " ms")
+            else:
+                success = False
+                print(" failure in " + str(time_taken)[:7] + " ms")
+    
+    return success, time_taken
+
+
+def test(args):
     fileList = []
-    timeList = []
     for root, dirs, files in os.walk(args.facts):
         for file in files:
             fileList.append(os.path.join(root, file))
     fileList.sort()
-    for filepath in fileList:
-        print(filepath.replace(args.facts, ""), end="")
-        start_time = time.time()
-        orders = get_orders(filepath, args.encoding, args.timeout)
-        end_time = time.time()
-        
-        if orders == None or orders == "unsat":
-            if orders == None:
-                print(" timeout")
-                success = False
-            else:
-                print(" unsat  ")
-            
-        else:
-            flatlandfile = filepath.replace(args.facts, args.objects)
-            flatlandfile = flatlandfile.replace(".lp", ".pkl")
-            with open(flatlandfile, "rb") as f:
-                object = pickle.load(f)
-                warnings.filterwarnings("ignore")
-                object.reset()
-                timeTaken = (end_time-start_time)*1000
-                timeList.append(timeTaken)
-                if run_orders(object, orders):
-                    print(" success in " + str(timeTaken)[:7] + " ms")
-                else:
-                    success = False
-                    print(" failure in " + str(timeTaken)[:7] + " ms")
 
-    if len(timeList) != 0:
-        average = sum(timeList) / len(timeList)
-    else:
-        average = False
+    # Parallel processing
+    pool = multiprocessing.Pool(processes=args.processes)
+    results = [pool.apply_async(process_file, (filepath, args)) for filepath in fileList]
+    pool.close()
+    pool.join()
+
+    success_list = [result.get()[0] for result in results]
+    time_list = [result.get()[1] for result in results]
+
+    success = all(success_list)
+    average = sum(time_list) / len(time_list) if time_list else False
 
     return success, average
 
@@ -135,6 +147,8 @@ def parse():
                         help='Directory of the flatland objects to solve on', default="testing/flatland/objects/", required=False)
     parser.add_argument('--clingo', '-c', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
+    parser.add_argument('--processes', '-p', metavar='N', type=int,
+                        help='Amount of processes to use (parallelization)', default=1, required=False)
     args = parser.parse_args()
     if shutil.which(args.clingo) is None:
         raise IOError("file %s not found!" % args.clingo)
@@ -144,6 +158,8 @@ def parse():
         raise IOError("directory %s not found!" % args.facts)
     if not os.path.isdir(args.objects):
         raise IOError("directory %s not found!" % args.objects)
+    if args.processes > multiprocessing.cpu_count():
+        raise IOError("Computer doesnt have %s cores, just %s found!" % (args.processes, multiprocessing.cpu_count()))
     if args.facts[-1] != "/":
         args.facts+="/"
     if args.objects[-1] != "/":
