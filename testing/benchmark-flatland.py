@@ -159,9 +159,9 @@ def test(args):
             plan = facts_to_flatland(atoms)
             if run_orders(env, plan): sucess += 1
             else: failure += 1
+            timeLeft = timeLeft - time
+            sumSolving += timeSolving
         
-        sumSolving += timeSolving
-        timeLeft = timeLeft - time
 
 
 def parse():

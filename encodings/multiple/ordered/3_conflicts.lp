@@ -9,5 +9,8 @@
 % simplification when moving in the same direction
 :- resolve((A,U),(B,V)), move(A,U,W), move(B,V,W), W!="End", not resolve((A,W),(B,W)).
 
+% % removing lock when ignoring transitivity
+% :- resolve((A,U),(B,V)), resolve((B,V),(C,W)), resolve((C,W),(A,V)).
+
 % A needs to be at V, before or at the same time as B may enter W
 ordering((A,V),(B,W)) :- resolve((A,U),(B,W)), move(A,U,V).

@@ -1,3 +1,0 @@
-Note: NumExpr detected 12 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-NumExpr defaulting to 8 threads.
-024x024_030/ex05.lp success in 85975.6 ms
