@@ -53,6 +53,7 @@ python testing/test-flatland.py -e encodings/multiple/grid/combined.lp
 - unsat results might be unsolvable
 
 ## Benchmarking
+Works only in unix environment.
 - checks how many random instances can be solved in given time
 ```
 python testing/benchmark-flatland.py -e encodings/multiple/grid/combined.lp

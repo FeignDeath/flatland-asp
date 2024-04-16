@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import os
 import shutil
@@ -71,11 +72,10 @@ def get_atoms(env,obs):
 
 
 def run_clingo(input, encoding, timeout):
-    limit = False
     name = encoding
     name = "tmp_" + name.replace("/","_") + ".lp"
 
-    command = "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
+    command = "ulimit -v 16000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
 
     with open(name, "w") as file:
         file.write(input)
@@ -84,8 +84,13 @@ def run_clingo(input, encoding, timeout):
     try:
         output = subprocess.check_output(command, shell=True, timeout=timeout).decode('utf-8')
     except subprocess.TimeoutExpired:
-        limit = True
-    if limit: return "TIMEOUT", None, None, None
+        return "TIMEOUT", None, None, None
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 139:
+            return "RAM FULL", None, None, None
+        else:
+            print(f"Command failed with return code {e.returncode}: {e.output}")
+            return None
 
     os.remove(name)
 
@@ -139,12 +144,13 @@ def test(args):
     l = len(str(timeLeft)) + 3
     sucess = 0
     failure = 0
+    ram_failure = 1
     sumSolving = 0
 
     while True:
 
         print(f"Sucess: {sucess}, Failures: {failure}, Time left: {timeLeft:{l}.2f}", end="\r")
-
+        
         warnings.filterwarnings("ignore")
         env = None
         env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
@@ -153,7 +159,10 @@ def test(args):
         initialAtoms = get_atoms(env, obs)
         sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft)
 
-        if sat == "TIMEOUT": return sucess, failure, sumSolving/args.timeout
+        if sat == "TIMEOUT": return sucess, failure, ram_failure, sumSolving
+        if sat == "RAM FULL":
+            ram_failure += 1
+            failure += 1
         if sat == "UNSATISFIABLE": failure += 1
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
@@ -180,6 +189,8 @@ def parse():
                         help='Amount of agents in the flatland instances', default=8, required=False)
     parser.add_argument('--clingo', '-c', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
+    parser.add_argument('--output', '-o', metavar='<file>',
+                        help='CSV file to store the Benchmarking results in', default="log.csv", required=False)
     args = parser.parse_args()
 
     if shutil.which(args.clingo) is None:
@@ -196,14 +207,37 @@ def parse():
     return args
 
 
+def write_output(args, s, f, rf, sol):
+    file_exists = os.path.exists(args.output)
+    with open(args.output, "a", newline="") as csvfile:
+        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Time"]
+        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+
+        if not file_exists:
+            writer.writeheader()
+        
+        writer.writerow({
+            "Encoding": args.encoding,
+            "Height": args.height,
+            "Width": args.width,
+            "Trains": args.agents,
+            "Sucess": s,
+            "Failures": f,
+            "RAM_Failures": rf,
+            "Solving Time": sol
+        })
+
+
+
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
     try:
         args=parse()
         sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        s, f, sol = test(args)
-        print(f"Sucess: {s}, Failures: {f}, Percentage of Solving Time: {sol*100:3.2f}")
+        s, f, rf, sol = test(args)
+        print(f"Sucess: {s}, Failures: {f}, Solving Time: {sol:.2f}")
+        write_output(args, s, f, rf, sol)
 
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
