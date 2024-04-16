@@ -140,7 +140,7 @@ def parse():
     parser.add_argument('--encoding', '-e', metavar='<file>',
                         help='ASP encoding to test', required=True)
     parser.add_argument('--timeout', '-t', metavar='N', type=int,
-                        help='Time allocated to each instance', default=100, required=False)
+                        help='Time allocated to each instance (in seconds)', default=100, required=False)
     parser.add_argument('--facts', '-f', metavar='<path>',
                         help='Directory of the facts', default="testing/flatland/facts/", required=False)
     parser.add_argument('--objects', '-s', metavar='<path>',
