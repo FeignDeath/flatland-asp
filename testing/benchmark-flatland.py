@@ -75,18 +75,19 @@ def run_clingo(input, encoding, timeout):
     name = encoding
     name = "tmp_" + name.replace("/","_") + ".lp"
 
-    command = "ulimit -v 16000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
+    command = "ulimit -v 160000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
 
     with open(name, "w") as file:
         file.write(input)
 
     # Run the command and capture its output
     try:
-        output = subprocess.check_output(command, shell=True, timeout=timeout).decode('utf-8')
+        output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode('utf-8')
     except subprocess.TimeoutExpired:
         return "TIMEOUT", None, None, None
     except subprocess.CalledProcessError as e:
         if e.returncode == 139:
+            print(e.output)
             return "RAM FULL", None, None, None
         else:
             print(f"Command failed with return code {e.returncode}: {e.output}")
@@ -95,6 +96,8 @@ def run_clingo(input, encoding, timeout):
     os.remove(name)
 
     data = json.loads(output)
+    if data["Result"] == "UNKNOWN":
+        return "RAM FULL", None, None, None
     if data["Result"] == "SATISFIABLE":
         return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], data["Call"][-1]["Witnesses"][0]["Value"]
     else:
@@ -144,8 +147,9 @@ def test(args):
     l = len(str(timeLeft)) + 3
     sucess = 0
     failure = 0
-    ram_failure = 1
+    ram_failure = 0
     sumSolving = 0
+    consecutive_failures = 0
 
     while True:
 
@@ -163,14 +167,23 @@ def test(args):
         if sat == "RAM FULL":
             ram_failure += 1
             failure += 1
-        if sat == "UNSATISFIABLE": failure += 1
+            consecutive_failures += 1
+        if sat == "UNSATISFIABLE":
+            failure += 1
+            consecutive_failures += 1
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
-            if run_orders(env, plan): sucess += 1
-            else: failure += 1
-            timeLeft = timeLeft - time
-            sumSolving += timeSolving
-        
+            if run_orders(env, plan):
+                sucess += 1
+                timeLeft = timeLeft - time
+                sumSolving += timeSolving
+                consecutive_failures = 0
+            else:
+                failure += 1
+                consecutive_failures += 1
+
+        if consecutive_failures > 2:
+            return 0, 0, 0, 0
 
 
 def parse():
