@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import warnings
+import psutil
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_env import TrainState
 
@@ -71,48 +72,45 @@ def get_atoms(env,obs):
     return output
 
 
-def run_clingo(input, encoding_path, timeout, ram_limit):
-    command = "ulimit -v " + str(ram_limit)
+def run_clingo(input, encoding, timeout, ram_limit):
+    dirs = os.listdir(encoding)
+    list.sort(dirs)
+    dirs = [i for i in dirs if "step" in i]
 
-    os.listdir(encoding_path)
+    total_time = 0
+    solve_time = 0
+    output = input
 
+    for i in dirs:
+        print("\nho")
+        command = "ulimit -v " + str(ram_limit*1024*1024*1024) + "; " + "echo \'" + input + "\' | clingo - " + encoding + i + " --outf=2 | jq"
+        print(command)
+        try:
+            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode("utf-8")
+        except subprocess.TimeoutExpired:
+            return "TIMEOUT", None, None, None
+        except subprocess.CalledProcessError:
+            return "MEMORY", None, None, None
 
+        try:
+            data = json.loads(output)
+        except json.JSONDecodeError:
+            return "MEMORY", None, None, None
 
-# def run_clingo(input, encoding, timeout):
-#     name = encoding
-#     name = "tmp_" + name.replace("/","_") + ".lp"
+        if data["Result"] == "UNKNOWN":
+            return "MEMORY", None, None, None
+        if data["Result"] == "UNSATISFIABLE":
+            return "UNSATISFIABLE", None, None, None
+        
+        total_time += data["Time"]["Total"]
+        solve_time += data["Time"]["Solve"]
+        output = data["Call"][-1]["Witnesses"][0]["Value"]
+        input = output.copy()
 
-#     command = "ulimit -v 20000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
-
-#     with open(name, "w") as file:
-#         file.write(input)
-
-#     # Run the command and capture its output
-#     try:
-#         output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode('utf-8')
-#     except subprocess.TimeoutExpired:
-#         return "TIMEOUT", None, None, None
-#     except subprocess.CalledProcessError as e:
-#         if e.returncode == 139:
-#             print(e.output)
-#             return "RAM FULL", None, None, None
-#         else:
-#             print(f"Command failed with return code {e.returncode}: {e.output}")
-#             return None
-
-#     os.remove(name)
-
-#     try:
-#         data = json.loads(output)
-#     except json.JSONDecodeError:
-#         return "RAM FULL", None, None, None
-
-#     if data["Result"] == "UNKNOWN":
-#         return "RAM FULL", None, None, None
-#     if data["Result"] == "SATISFIABLE":
-#         return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], data["Call"][-1]["Witnesses"][0]["Value"]
-#     else:
-#        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], None
+        input.append("")
+        input = ".".join(input)
+        
+    return "SATISFIABLE", total_time, solve_time, output
 
 
 def facts_to_flatland(atoms):
@@ -172,7 +170,7 @@ def test(args):
         obs = env.reset()
 
         initialAtoms = get_atoms(env, obs)
-        sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft)
+        sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
 
         if sat == "TIMEOUT": return sucess, failure, ram_failure, sumSolving
         if sat == "RAM FULL":
@@ -195,20 +193,18 @@ def test(args):
 
         if consecutive_failures > 2:
             return 0, 0, 0, 0
-        #TOREMOVE
-        return 0, 0, 0, 0
 
 
 def parse():
     parser = argparse.ArgumentParser(
         description="Test ASP encodings"
     )
-    parser.add_argument('--encoding_path', '-e', metavar='<dir>',
+    parser.add_argument('--encoding', '-e', metavar='<dir>',
                         help='Path to the encodings which are piped from step1.lp to stepN.lp', required=True)
     parser.add_argument('--timeout', '-t', metavar='N', type=int,
                         help='Time for solving', default=600, required=False)
     parser.add_argument('--memory', '-m', metavar='N', type=int,
-                        help='Maximum RAM allocated for solving', default=, required=False)
+                        help='Maximum RAM allocated for solving in Gigabytes', default=8, required=False)
     parser.add_argument('--width', '-y', metavar='N', type=int,
                         help='Width of the flatland instances', default=40, required=False)
     parser.add_argument('--height', '-x', metavar='N', type=int,
@@ -223,7 +219,7 @@ def parse():
 
     if shutil.which(args.clingo) is None:
         raise IOError("file %s not found!" % args.clingo)
-    if not os.path.isfile(args.encoding):
+    if not os.path.isdir(args.encoding):
         raise IOError("file %s not found!" % args.encoding)
     if args.width < 20:
         raise IOError("width %s is less than 20!" % args.width)
@@ -231,6 +227,10 @@ def parse():
         raise IOError("height %s is less than 24!" % args.height)
     if args.agents < 1:
         raise IOError("number of agents %s is less than 1!" % args.agents)
+    if args.memory*1024*1024*1024 > 0.8*psutil.virtual_memory().total:
+        raise IOError(f"memory {args.memory}GB is more than 80 percent of the available memory {psutil.virtual_memory().total/1024/1024/1024:.0f}GB")
+    if args.encoding[-1] != "/":
+        args.encoding+="/"
 
     return args
 
