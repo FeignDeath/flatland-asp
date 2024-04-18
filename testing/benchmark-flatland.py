@@ -71,41 +71,48 @@ def get_atoms(env,obs):
     return output
 
 
-def run_clingo(input, encoding, timeout):
-    name = encoding
-    name = "tmp_" + name.replace("/","_") + ".lp"
+def run_clingo(input, encoding_path, timeout, ram_limit):
+    command = "ulimit -v " + str(ram_limit)
 
-    command = "ulimit -v 20000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
+    os.listdir(encoding_path)
 
-    with open(name, "w") as file:
-        file.write(input)
 
-    # Run the command and capture its output
-    try:
-        output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode('utf-8')
-    except subprocess.TimeoutExpired:
-        return "TIMEOUT", None, None, None
-    except subprocess.CalledProcessError as e:
-        if e.returncode == 139:
-            print(e.output)
-            return "RAM FULL", None, None, None
-        else:
-            print(f"Command failed with return code {e.returncode}: {e.output}")
-            return None
 
-    os.remove(name)
+# def run_clingo(input, encoding, timeout):
+#     name = encoding
+#     name = "tmp_" + name.replace("/","_") + ".lp"
 
-    try:
-        data = json.loads(output)
-    except json.JSONDecodeError:
-        return "RAM FULL", None, None, None
+#     command = "ulimit -v 20000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
 
-    if data["Result"] == "UNKNOWN":
-        return "RAM FULL", None, None, None
-    if data["Result"] == "SATISFIABLE":
-        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], data["Call"][-1]["Witnesses"][0]["Value"]
-    else:
-        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], None
+#     with open(name, "w") as file:
+#         file.write(input)
+
+#     # Run the command and capture its output
+#     try:
+#         output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode('utf-8')
+#     except subprocess.TimeoutExpired:
+#         return "TIMEOUT", None, None, None
+#     except subprocess.CalledProcessError as e:
+#         if e.returncode == 139:
+#             print(e.output)
+#             return "RAM FULL", None, None, None
+#         else:
+#             print(f"Command failed with return code {e.returncode}: {e.output}")
+#             return None
+
+#     os.remove(name)
+
+#     try:
+#         data = json.loads(output)
+#     except json.JSONDecodeError:
+#         return "RAM FULL", None, None, None
+
+#     if data["Result"] == "UNKNOWN":
+#         return "RAM FULL", None, None, None
+#     if data["Result"] == "SATISFIABLE":
+#         return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], data["Call"][-1]["Witnesses"][0]["Value"]
+#     else:
+#        return data["Result"], data["Time"]["Total"], data["Time"]["Solve"], None
 
 
 def facts_to_flatland(atoms):
@@ -188,16 +195,20 @@ def test(args):
 
         if consecutive_failures > 2:
             return 0, 0, 0, 0
+        #TOREMOVE
+        return 0, 0, 0, 0
 
 
 def parse():
     parser = argparse.ArgumentParser(
         description="Test ASP encodings"
     )
-    parser.add_argument('--encoding', '-e', metavar='<file>',
-                        help='ASP encoding to test', required=True)
+    parser.add_argument('--encoding_path', '-e', metavar='<dir>',
+                        help='Path to the encodings which are piped from step1.lp to stepN.lp', required=True)
     parser.add_argument('--timeout', '-t', metavar='N', type=int,
                         help='Time for solving', default=600, required=False)
+    parser.add_argument('--memory', '-m', metavar='N', type=int,
+                        help='Maximum RAM allocated for solving', default=, required=False)
     parser.add_argument('--width', '-y', metavar='N', type=int,
                         help='Width of the flatland instances', default=40, required=False)
     parser.add_argument('--height', '-x', metavar='N', type=int,

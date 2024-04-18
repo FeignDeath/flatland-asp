@@ -36,7 +36,7 @@ python testing/test-cornercases.py -e encodings/multiple/path/combined.lp -i tes
 
 - autogenerating maps and facts
 ```
-python testing/flatland/generateinstances.py -n 10 -x 20 -y 24 -a 4
+python testing/flatland/generateinstances.py -n 10 -x 24 -y 24 -a 4
 ```
 - n specifies the amount of maps generated
 - x and y define the size of each map and require a minimum of 20x24
