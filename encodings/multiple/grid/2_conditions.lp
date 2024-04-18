@@ -1,7 +1,7 @@
 %% ensuring the path reaches the goal and conflicts are forbidden
 
 % the goal must be reached in time
-goal(A) :- state(A,(P,_),T'), T'<=T+4, target(A,P,T).
+goal(A) :- state(A,(P,_),T'), T'<=T, target(A,P,T).
 :- agent(A), not goal(A).
 
 % collisions are forbidden
