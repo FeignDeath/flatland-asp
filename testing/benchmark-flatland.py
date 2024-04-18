@@ -82,9 +82,7 @@ def run_clingo(input, encoding, timeout, ram_limit):
     output = input
 
     for i in dirs:
-        print("\nho")
         command = "ulimit -v " + str(ram_limit*1024*1024*1024) + "; " + "echo \'" + input + "\' | clingo - " + encoding + i + " --outf=2 | jq"
-        print(command)
         try:
             output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode("utf-8")
         except subprocess.TimeoutExpired:
@@ -168,6 +166,7 @@ def test(args):
         env = None
         env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
         obs = env.reset()
+        if not args.horizon: env._max_episode_steps = None
 
         initialAtoms = get_atoms(env, obs)
         sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
@@ -214,7 +213,9 @@ def parse():
     parser.add_argument('--clingo', '-c', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
     parser.add_argument('--output', '-o', metavar='<file>',
-                        help='CSV file to store the Benchmarking results in', default="log.csv", required=False)
+                        help='CSV file to store the Benchmarking results in', default="testing/log.csv", required=False)
+    parser.add_argument('--horizon', '-ho', action=argparse.BooleanOptionalAction,
+                        help='Sets whether a horizon should be used', required=False)
     args = parser.parse_args()
 
     if shutil.which(args.clingo) is None:
