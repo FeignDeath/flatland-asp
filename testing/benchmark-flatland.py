@@ -75,7 +75,7 @@ def run_clingo(input, encoding, timeout):
     name = encoding
     name = "tmp_" + name.replace("/","_") + ".lp"
 
-    command = "ulimit -v 160000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
+    command = "ulimit -v 20000000; " + "clingo " + name + " " + encoding + " --outf=2 -W none | jq '.'"
 
     with open(name, "w") as file:
         file.write(input)
