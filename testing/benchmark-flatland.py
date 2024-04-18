@@ -95,7 +95,11 @@ def run_clingo(input, encoding, timeout):
 
     os.remove(name)
 
-    data = json.loads(output)
+    try:
+        data = json.loads(output)
+    except json.JSONDecodeError:
+        return "RAM FULL", None, None, None
+
     if data["Result"] == "UNKNOWN":
         return "RAM FULL", None, None, None
     if data["Result"] == "SATISFIABLE":

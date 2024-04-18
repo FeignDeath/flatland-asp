@@ -1,0 +1,9 @@
+Encoding,Height,Width,Trains,Sucess,Failures,RAM_Failures,Solving Time
+encodings/multiple/ordered/combined.lp,40,40,5,222,7,0,89.04899999999999
+encodings/multiple/ordered/combined.lp,40,40,10,41,0,0,84.75399999999999
+encodings/multiple/ordered/combined.lp,40,40,15,10,1,0,169.54999999999998
+encodings/multiple/ordered/combined.lp,40,40,20,10,4,1,185.35299999999998
+encodings/multiple/ordered/combined.lp,40,40,25,3,2,0,365.71299999999997
+encodings/multiple/ordered/combined.lp,40,40,30,1,1,0,475.249
+encodings/multiple/ordered/combined.lp,40,40,35,0,0,0,0
+encodings/multiple/ordered/combined.lp,40,40,40,0,0,0,0

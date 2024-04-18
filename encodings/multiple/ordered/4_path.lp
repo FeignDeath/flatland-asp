@@ -9,4 +9,4 @@ state(A,U,T) :- state(A,U,T-1), state(A,"Start",T-2), U!="Start", time(T).
 state(A,V,T) :- state(A,U,T-1), move(A,U,V), not state(A,U,T), time(T).
 
 % agent must conform the the ordering
-:- ordering((A,U),(B,W)), move(A,U,V), state(A,V,T1), state(B,W,T2), T1>T2.
+:- resolve((A,U),(B,W)), move(A,U,V), state(A,V,T1), state(B,W,T2), T1>T2.
