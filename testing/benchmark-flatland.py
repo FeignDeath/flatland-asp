@@ -82,9 +82,9 @@ def run_clingo(input, encoding, timeout, ram_limit):
     output = input
 
     for i in dirs:
-        command = "ulimit -v " + str(ram_limit*1024*1024*1024) + "; " + "echo \'" + input + "\' | clingo - " + encoding + i + " --outf=2 | jq"
+        command = "ulimit -v " + str(ram_limit*1024*1024*1024) + "; clingo - " + encoding + i + " --outf=2 | jq"
         try:
-            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL).decode("utf-8")
+            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL, input=input.encode("utf-8")).decode("utf-8")
         except subprocess.TimeoutExpired:
             return "TIMEOUT", None, None, None
         except subprocess.CalledProcessError:
