@@ -174,7 +174,7 @@ def test(args):
         initialAtoms = get_atoms(env, obs)
         sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
 
-        if sat == "TIMEOUT": return sucess, failure, ram_failure, sum_solving, int(accumulated_horizon/sucess)
+        if sat == "TIMEOUT": return sucess, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(accumulated_horizon/sucess)
         if sat == "RAM FULL":
             ram_failure += 1
             failure += 1
@@ -250,7 +250,7 @@ def parse():
 def write_output(args, s, f, rf, sol, h):
     file_exists = os.path.exists(args.output)
     with open(args.output, "a", newline="") as csvfile:
-        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Time", "Horizon Exceeded"]
+        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Proportion", "Horizon Exceeded"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
         if not file_exists:
@@ -264,7 +264,7 @@ def write_output(args, s, f, rf, sol, h):
             "Sucess": s,
             "Failures": f,
             "RAM_Failures": rf,
-            "Solving Time": sol,
+            "Solving Proportion": sol,
             "Horizon Exceeded": h
         })
 
