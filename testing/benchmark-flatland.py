@@ -143,10 +143,10 @@ def run_orders(env, plan):
     
         obs, rew, done, info = env.step(dictionary)
 
-        if done["__all__"]:
-            return all(info["state"][i] == TrainState.DONE for i in info["state"])
-
         t += 1
+
+        if done["__all__"]:
+            return all(info["state"][i] == TrainState.DONE for i in info["state"]), t
 
 
 def test(args):
@@ -155,8 +155,10 @@ def test(args):
     sucess = 0
     failure = 0
     ram_failure = 0
-    sumSolving = 0
+    sum_solving = 0
     consecutive_failures = 0
+    accumulated_horizon = 0
+    failure_reasons = []
 
     while True:
 
@@ -166,32 +168,39 @@ def test(args):
         env = None
         env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
         obs = env.reset()
+        horizon = env._max_episode_steps
         if not args.horizon: env._max_episode_steps = None
 
         initialAtoms = get_atoms(env, obs)
         sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
 
-        if sat == "TIMEOUT": return sucess, failure, ram_failure, sumSolving
+        if sat == "TIMEOUT": return sucess, failure, ram_failure, sum_solving, int(accumulated_horizon/sucess)
         if sat == "RAM FULL":
             ram_failure += 1
             failure += 1
             consecutive_failures += 1
+            failure_reasons.append(sat)
         if sat == "UNSATISFIABLE":
             failure += 1
             consecutive_failures += 1
+            failure_reasons.append(sat)
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
-            if run_orders(env, plan):
+            state, steps = run_orders(env,plan)
+            if state:
                 sucess += 1
                 timeLeft = timeLeft - time
-                sumSolving += timeSolving
+                sum_solving += timeSolving
                 consecutive_failures = 0
+                accumulated_horizon += max(steps - horizon, 0)
             else:
                 failure += 1
                 consecutive_failures += 1
+                failure_reasons.append(sat)
 
-        if consecutive_failures > 2:
-            return 0, 0, 0, 0
+        if consecutive_failures == args.failures:
+            most_frequent = max(set(failure_reasons), key=failure_reasons.count)
+            return most_frequent, 0, 0, 0, 0
 
 
 def parse():
@@ -216,6 +225,8 @@ def parse():
                         help='CSV file to store the Benchmarking results in', default="testing/log.csv", required=False)
     parser.add_argument('--horizon', '-ho', action=argparse.BooleanOptionalAction,
                         help='Sets whether a horizon should be used', required=False)
+    parser.add_argument('--failures', '-f', metavar='N', type=int,
+                        help='Amount of consecutive failures necessary to abort (Default=3)', default=3, required=False)
     args = parser.parse_args()
 
     if shutil.which(args.clingo) is None:
@@ -236,10 +247,10 @@ def parse():
     return args
 
 
-def write_output(args, s, f, rf, sol):
+def write_output(args, s, f, rf, sol, h):
     file_exists = os.path.exists(args.output)
     with open(args.output, "a", newline="") as csvfile:
-        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Time"]
+        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Time", "Horizon Exceeded"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
         if not file_exists:
@@ -253,20 +264,41 @@ def write_output(args, s, f, rf, sol):
             "Sucess": s,
             "Failures": f,
             "RAM_Failures": rf,
-            "Solving Time": sol
+            "Solving Time": sol,
+            "Horizon Exceeded": h
         })
 
 
+# Checs whether the csv entrie already exists
+def check_csv(file_path, encoding, height, width, trains):
+    if not os.path.exists(file_path):
+        return False
+
+    with open(file_path, mode="r") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            if (row['Encoding'] == encoding and 
+                row['Height'] == str(height) and 
+                row['Width'] == str(width) and 
+                row['Trains'] == str(trains)):
+                return True
+    
+    return False
+    
 
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
     try:
         args=parse()
+        if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
+            sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
+            return 0
         sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        s, f, rf, sol = test(args)
-        print(f"Sucess: {s}, Failures: {f}, Solving Time: {sol:.2f}")
-        write_output(args, s, f, rf, sol)
+        s, f, rf, sol, h = test(args)
+        print()
+        write_output(args, s, f, rf, sol, h)
 
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
