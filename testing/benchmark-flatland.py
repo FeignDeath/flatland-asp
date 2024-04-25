@@ -2,6 +2,7 @@ import argparse
 import csv
 import json
 import os
+import resource
 import shutil
 import subprocess
 import sys
@@ -72,6 +73,10 @@ def get_atoms(env,obs):
     return output
 
 
+def limit_memory(m):
+    resource.setrlimit(resource.RLIMIT_AS, (m*1024**3, resource.RLIM_INFINITY))
+
+
 def run_clingo(input, encoding, timeout, ram_limit):
     dirs = os.listdir(encoding)
     list.sort(dirs)
@@ -82,13 +87,18 @@ def run_clingo(input, encoding, timeout, ram_limit):
     output = input
 
     for i in dirs:
-        command = "ulimit -v " + str(ram_limit*1024*1024*1024) + "; clingo - " + encoding + i + " --outf=2 | jq"
+        command = "clingo - " + encoding + i + " --outf=2 | jq"
         try:
-            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL, input=input.encode("utf-8")).decode("utf-8")
+            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL, input=input.encode("utf-8"), preexec_fn=limit_memory(ram_limit)).decode("utf-8")
         except subprocess.TimeoutExpired:
             return "TIMEOUT", None, None, None
         except subprocess.CalledProcessError:
             return "MEMORY", None, None, None
+        except MemoryError:
+            return "MEMORY", None, None, None
+        except Exception as err:
+            print(f"Unexpected {err=}, {type(err)=}")
+            raise
 
         try:
             data = json.loads(output)
@@ -152,7 +162,7 @@ def run_orders(env, plan):
 def test(args):
     timeLeft = args.timeout
     l = len(str(timeLeft)) + 3
-    sucess = 0
+    success = 0
     failure = 0
     ram_failure = 0
     sum_solving = 0
@@ -162,7 +172,7 @@ def test(args):
 
     while True:
 
-        print(f"Sucess: {sucess}, Failures: {failure}, Time left: {timeLeft:{l}.2f}", end="\r")
+        print(f"Success: {success}, Failures: {failure}, Time left: {timeLeft:{l}.2f}", end="\r")
         
         warnings.filterwarnings("ignore")
         env = None
@@ -174,7 +184,11 @@ def test(args):
         initialAtoms = get_atoms(env, obs)
         sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
 
-        if sat == "TIMEOUT": return sucess, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(accumulated_horizon/sucess)
+        if sat == "TIMEOUT":
+            if success != 0:
+                return "SUCCESS", success, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(accumulated_horizon/success)
+            else:
+                return "TIMEOUT", success, failure, ram_failure, 0, 0
         if sat == "RAM FULL":
             ram_failure += 1
             failure += 1
@@ -188,7 +202,7 @@ def test(args):
             plan = facts_to_flatland(atoms)
             state, steps = run_orders(env,plan)
             if state:
-                sucess += 1
+                success += 1
                 timeLeft = timeLeft - time
                 sum_solving += timeSolving
                 consecutive_failures = 0
@@ -200,7 +214,7 @@ def test(args):
 
         if consecutive_failures == args.failures:
             most_frequent = max(set(failure_reasons), key=failure_reasons.count)
-            return most_frequent, 0, 0, 0, 0
+            return most_frequent, success, failure, ram_failure, 0, 0
 
 
 def parse():
@@ -247,10 +261,10 @@ def parse():
     return args
 
 
-def write_output(args, s, f, rf, sol, h):
+def write_output(args, r, s, f, rf, sol, h):
     file_exists = os.path.exists(args.output)
     with open(args.output, "a", newline="") as csvfile:
-        fieldnames = ["Encoding", "Height", "Width", "Trains", "Sucess", "Failures", "RAM_Failures", "Solving Proportion", "Horizon Exceeded"]
+        fieldnames = ["Encoding", "Height", "Width", "Trains", "Result", "Success", "Failures", "RAM_Failures", "Solving Proportion", "Horizon Exceeded"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
         if not file_exists:
@@ -261,7 +275,8 @@ def write_output(args, s, f, rf, sol, h):
             "Height": args.height,
             "Width": args.width,
             "Trains": args.agents,
-            "Sucess": s,
+            "Result": r,
+            "Success": s,
             "Failures": f,
             "RAM_Failures": rf,
             "Solving Proportion": sol,
@@ -296,12 +311,13 @@ def main():
             sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
             return 0
         sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        s, f, rf, sol, h = test(args)
+        r, s, f, rf, sol, h = test(args)
         print()
-        write_output(args, s, f, rf, sol, h)
+        write_output(args, r, s, f, rf, sol, h)
 
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
+        print(f"Unexpected {e=}, {type(e)=}")
         return 1
 
 if __name__ == '__main__':

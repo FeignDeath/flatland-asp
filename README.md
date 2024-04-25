@@ -58,6 +58,11 @@ Works only in unix environment.
 ```
 python testing/benchmark-flatland.py -e encodings/multiple/grid/combined.lp
 ```
-- e specifies the encoding to be tested
+- e specifies the directory of the encodings to be tested
+    - encodings need to be in the form "stepn.lp"
+    - step1.lp is solved and its output piped into step2.lp and so on
 - x, y and a can be specified as arguments
 - t sets timout
+- m sets the ram limit
+- o specifies a csv file to store results in
+- f specifies at how many consecutive failures the benchmarking should stop
