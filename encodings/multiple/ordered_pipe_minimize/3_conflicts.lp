@@ -17,8 +17,3 @@
 
 #edge((A,U),(A,V)) : move(A,U,V).
 #edge((A,V),(B,W)) : resolve((A,U),(B,W)), move(A,U,V).
-
-#minimize{
-    1,A,U,B,V : resolve((A,U),(B,V));
-    1,A,U,V : move(A,U,V)
-}.

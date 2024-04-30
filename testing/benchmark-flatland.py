@@ -2,7 +2,6 @@ import argparse
 import csv
 import json
 import os
-import resource
 import shutil
 import subprocess
 import sys
@@ -73,52 +72,61 @@ def get_atoms(env,obs):
     return output
 
 
-def limit_memory(m):
-    resource.setrlimit(resource.RLIMIT_AS, (m*1024**3, resource.RLIM_INFINITY))
+def limit_memory(ram_limit):
+    # Define a function to set resource limits
+    import resource
+    def set_limits():
+        resource.setrlimit(resource.RLIMIT_AS, (ram_limit*1024**3, ram_limit*1024**3))
+    return set_limits
 
 
-def run_clingo(input, encoding, timeout, ram_limit):
+def run_clingo(input_data, encoding, timeout, ram_limit):
     dirs = os.listdir(encoding)
     list.sort(dirs)
     dirs = [i for i in dirs if "step" in i]
 
     total_time = 0
     solve_time = 0
-    output = input
+    output_atoms = input_data
 
     for i in dirs:
-        command = "clingo - " + encoding + i + " --outf=2 | jq"
+        command = ["clingo", "-", encoding + i, "--outf=2"]
+
         try:
-            output = subprocess.check_output(command, shell=True, timeout=timeout, stderr=subprocess.DEVNULL, input=input.encode("utf-8"), preexec_fn=limit_memory(ram_limit)).decode("utf-8")
+            output = subprocess.check_output(
+                command,
+                timeout=timeout,
+                stderr=subprocess.DEVNULL,
+                input=input_data.encode("utf-8"),
+                preexec_fn=limit_memory(ram_limit)).decode("utf-8")
+
         except subprocess.TimeoutExpired:
             return "TIMEOUT", None, None, None
-        except subprocess.CalledProcessError:
-            return "MEMORY", None, None, None
-        except MemoryError:
-            return "MEMORY", None, None, None
-        except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}")
-            raise
+        except subprocess.CalledProcessError as e:
+            # This is no Error this is the normal way clingo exits
+            # Whoever made this should be stoned
 
-        try:
-            data = json.loads(output)
-        except json.JSONDecodeError:
-            return "MEMORY", None, None, None
+            # But it also embodies errors, so here is the memory one:
+            if e.returncode == 33:
+                return "MEMORY", None, None, None
+            if e.returncode == 20:
+                return "UNSATISFIABLE", None, None, None
 
-        if data["Result"] == "UNKNOWN":
-            return "MEMORY", None, None, None
-        if data["Result"] == "UNSATISFIABLE":
-            return "UNSATISFIABLE", None, None, None
-        
+            # And here is the output to make it work
+            output = e.output
+
+        jq_output = subprocess.check_output(["jq"], input=output)
+        data = json.loads(jq_output)
+
         total_time += data["Time"]["Total"]
         solve_time += data["Time"]["Solve"]
-        output = data["Call"][-1]["Witnesses"][0]["Value"]
-        input = output.copy()
+        output_atoms = data["Call"][-1]["Witnesses"][0]["Value"]
+        input_data = output_atoms.copy()
 
-        input.append("")
-        input = ".".join(input)
+        input_data.append("")
+        input_data = ".".join(input_data)
         
-    return "SATISFIABLE", total_time, solve_time, output
+    return "SATISFIABLE", total_time, solve_time, output_atoms
 
 
 def facts_to_flatland(atoms):
@@ -169,6 +177,7 @@ def test(args):
     consecutive_failures = 0
     accumulated_horizon = 0
     failure_reasons = []
+    given_horizon = 0
 
     while True:
 
@@ -186,10 +195,10 @@ def test(args):
 
         if sat == "TIMEOUT":
             if success != 0:
-                return "SUCCESS", success, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(accumulated_horizon/success)
+                return "SUCCESS", success, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(given_horizon/success), int(accumulated_horizon/success)
             else:
-                return "TIMEOUT", success, failure, ram_failure, 0, 0
-        if sat == "RAM FULL":
+                return "TIMEOUT", success, failure, ram_failure, 0, 0, 0
+        if sat == "MEMORY":
             ram_failure += 1
             failure += 1
             consecutive_failures += 1
@@ -206,7 +215,8 @@ def test(args):
                 timeLeft = timeLeft - time
                 sum_solving += timeSolving
                 consecutive_failures = 0
-                accumulated_horizon += max(steps - horizon, 0)
+                given_horizon += horizon
+                accumulated_horizon += steps
             else:
                 failure += 1
                 consecutive_failures += 1
@@ -214,7 +224,7 @@ def test(args):
 
         if consecutive_failures == args.failures:
             most_frequent = max(set(failure_reasons), key=failure_reasons.count)
-            return most_frequent, success, failure, ram_failure, 0, 0
+            return most_frequent, success, failure, ram_failure, 0, 0, 0
 
 
 def parse():
@@ -261,10 +271,10 @@ def parse():
     return args
 
 
-def write_output(args, r, s, f, rf, sol, h):
+def write_output(args, r, s, f, rf, sol, gh, h):
     file_exists = os.path.exists(args.output)
     with open(args.output, "a", newline="") as csvfile:
-        fieldnames = ["Encoding", "Height", "Width", "Trains", "Result", "Success", "Failures", "RAM_Failures", "Solving Proportion", "Horizon Exceeded"]
+        fieldnames = ["Encoding", "Height", "Width", "Trains", "Result", "Success", "Failures", "RAM_Failures", "Solving Proportion", "Given Horizon", "Resulting Horizon"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
         if not file_exists:
@@ -280,7 +290,8 @@ def write_output(args, r, s, f, rf, sol, h):
             "Failures": f,
             "RAM_Failures": rf,
             "Solving Proportion": sol,
-            "Horizon Exceeded": h
+            "Given Horizon": gh,
+            "Resulting Horizon": h
         })
 
 
@@ -311,9 +322,9 @@ def main():
             sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
             return 0
         sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        r, s, f, rf, sol, h = test(args)
+        r, s, f, rf, sol, gh, h = test(args)
         print()
-        write_output(args, r, s, f, rf, sol, h)
+        write_output(args, r, s, f, rf, sol, gh, h)
 
     except Exception as e:
         sys.stderr.write("ERROR: %s\n" % str(e))
