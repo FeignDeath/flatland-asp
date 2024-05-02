@@ -81,6 +81,58 @@ def limit_memory(ram_limit):
 
 
 def run_clingo(input_data, encoding, timeout, ram_limit):
+    command = ["clingo", "-", encoding, "--outf=2"]
+
+    try:
+        output = subprocess.check_output(
+            command,
+            timeout=timeout,
+            stderr=subprocess.DEVNULL,
+            input=input_data.encode("utf-8"),
+            preexec_fn=limit_memory(ram_limit)).decode("utf-8")
+
+    except subprocess.TimeoutExpired:
+        return "TIMEOUT"
+    except subprocess.CalledProcessError as e:
+        # This is no Error this is the normal way clingo exits
+        # Whoever made this should be stoned
+
+        # But it also embodies errors, so here is the memory one:
+        if e.returncode == 33:
+            return "MEMORY"
+        if e.returncode == 20:
+            return "UNSATISFIABLE"
+
+        # And here is the output to make it work
+        return e.output
+
+
+def run_python(input_data, program, timeout, ram_limit):
+    command = ["python", program]
+
+    try:
+        output = subprocess.check_output(
+            command,
+            timeout=timeout,
+            stderr=subprocess.DEVNULL,
+            input=input_data.encode("utf-8"),
+            preexec_fn=limit_memory(ram_limit)).decode("utf-8")
+
+    except subprocess.TimeoutExpired:
+        return "TIMEOUT"
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 20:
+            return "UNSATISFIABLE"
+        else:
+            return "MEMORY"
+    except Exception as e:
+        print(f"Problem with Python {e=}, {type(e)=}")
+        raise
+
+    return output.encode("utf-8")
+
+
+def run(input_data, encoding, timeout, ram_limit):
     dirs = os.listdir(encoding)
     list.sort(dirs)
     dirs = [i for i in dirs if "step" in i]
@@ -90,30 +142,14 @@ def run_clingo(input_data, encoding, timeout, ram_limit):
     output_atoms = input_data
 
     for i in dirs:
-        command = ["clingo", "-", encoding + i, "--outf=2"]
-
-        try:
-            output = subprocess.check_output(
-                command,
-                timeout=timeout,
-                stderr=subprocess.DEVNULL,
-                input=input_data.encode("utf-8"),
-                preexec_fn=limit_memory(ram_limit)).decode("utf-8")
-
-        except subprocess.TimeoutExpired:
-            return "TIMEOUT", None, None, None
-        except subprocess.CalledProcessError as e:
-            # This is no Error this is the normal way clingo exits
-            # Whoever made this should be stoned
-
-            # But it also embodies errors, so here is the memory one:
-            if e.returncode == 33:
-                return "MEMORY", None, None, None
-            if e.returncode == 20:
-                return "UNSATISFIABLE", None, None, None
-
-            # And here is the output to make it work
-            output = e.output
+        if ".lp" in i:
+            output = run_clingo(input_data, encoding + i, timeout, ram_limit)
+            if (output == "TIMEOUT") | (output == "MEMORY") | (output == "UNSATISFIABLE"):
+                return output, None, None, None
+        if ".py" in i:
+            output = run_python(input_data, encoding + i, timeout, ram_limit)
+            if (output == "TIMEOUT") | (output == "MEMORY") | (output == "UNSATISFIABLE"):
+                return output, None, None, None
 
         jq_output = subprocess.check_output(["jq"], input=output)
         data = json.loads(jq_output)
@@ -191,7 +227,7 @@ def test(args):
         if not args.horizon: env._max_episode_steps = None
 
         initialAtoms = get_atoms(env, obs)
-        sat, time, timeSolving, atoms = run_clingo(initialAtoms, args.encoding, timeLeft, args.memory)
+        sat, time, timeSolving, atoms = run(initialAtoms, args.encoding, timeLeft, args.memory)
 
         if sat == "TIMEOUT":
             if success != 0:
@@ -316,20 +352,19 @@ def check_csv(file_path, encoding, height, width, trains):
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
-    try:
-        args=parse()
-        if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
-            sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
-            return 0
-        sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        r, s, f, rf, sol, gh, h = test(args)
-        print()
-        write_output(args, r, s, f, rf, sol, gh, h)
+    # try:
+    args=parse()
+    if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
+        sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
+        return 0
+    sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
+    r, s, f, rf, sol, gh, h = test(args)
+    print()
+    write_output(args, r, s, f, rf, sol, gh, h)
 
-    except Exception as e:
-        sys.stderr.write("ERROR: %s\n" % str(e))
-        print(f"Unexpected {e=}, {type(e)=}")
-        return 1
+    # except Exception as e:
+    #     sys.stderr.write("ERROR: %s\n" % str(e))
+    #     return 1
 
 if __name__ == '__main__':
     sys.exit(main())
