@@ -352,19 +352,19 @@ def check_csv(file_path, encoding, height, width, trains):
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
-    # try:
-    args=parse()
-    if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
-        sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
-        return 0
-    sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-    r, s, f, rf, sol, gh, h = test(args)
-    print()
-    write_output(args, r, s, f, rf, sol, gh, h)
+    try:
+        args=parse()
+        if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
+            sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
+            return 0
+        sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
+        r, s, f, rf, sol, gh, h = test(args)
+        print()
+        write_output(args, r, s, f, rf, sol, gh, h)
 
-    # except Exception as e:
-    #     sys.stderr.write("ERROR: %s\n" % str(e))
-    #     return 1
+    except Exception as e:
+        sys.stderr.write("ERROR: %s\n" % str(e))
+        return 1
 
 if __name__ == '__main__':
     sys.exit(main())
