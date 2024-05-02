@@ -3,7 +3,7 @@
 - conda create env (python 3.11 as of now)
 - install clingo via forge
 - install numpy, matplotlib and pandas
-- pip flatland
+- pip flatland-rl
 
 Goals:
 - [Flatland Challenge](https://www.aicrowd.com/challenges/flatland-3)

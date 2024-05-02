@@ -120,9 +120,9 @@ def main():
             filename = "ex" + f"{i:02d}"
             print("generating " + dirname + filename)
             env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
-            obs = env.reset()
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
                 pickle.dump(env, file)
+            obs = env.reset()
             
             get_atoms(env, obs, args.facts + dirname + filename + ".lp")
         
