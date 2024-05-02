@@ -61,7 +61,9 @@ def run(input_string):
 
     ctl2.ground([("base", [])])
     solutions = []
-    ctl2.solve(on_model=on_model)
+    r = ctl2.solve(on_model=on_model)
+    if str(r) == "UNSAT":
+        sys.exit(20)
 
     new_times = ctl2.statistics["summary"]["times"]
     times = {k: times.get(k, 0) + new_times.get(k, 0) for k in set(times)}
