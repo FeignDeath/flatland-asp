@@ -9,7 +9,7 @@ fromto(U,(P,D)) :- vertex((P,D)), initialstate(A,U,_), target(A,P,_).
 
 % choice rule for moves, only one is needed
 % every vertex may be left via up to une move
-% {move(A,U,V): edge(U,V)} 1 :- agent(A), vertex(U).
+% {move(A,U,V): edge(U,V)} 1 :- initialstate(_,A,_), vertex(U).
 % every move may have a follow up move
 {move(A,U,V): edge(U,V)} 1 :- move(A,_,U).
 
@@ -20,6 +20,9 @@ fromto(U,(P,D)) :- vertex((P,D)), initialstate(A,U,_), target(A,P,_).
 
 % every move has no more than 1 leading up to it
 :- move(A,V,_), 2 {move(A,_,V)}.
+
+% add a bound for paths
+:- N = {move(_,_,_)}, not time(N).
 
 #show move/3.
 #show initialstate/3.
