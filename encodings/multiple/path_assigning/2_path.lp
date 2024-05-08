@@ -30,3 +30,4 @@ fromto(U,(P,D)) :- vertex((P,D)), initialstate(A,U,_), target(A,P,_).
 #show transition/2.
 #show left/2.
 #show right/2.
+#show target/3.
