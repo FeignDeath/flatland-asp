@@ -1,9 +1,8 @@
 %% generating a path via actions
 
 % choose a time for an agent to spawn, whereat he appears and stays at least one timestep
-1 {starttime(A,T'): time(T'), T'>0, T'>=T, time(T'+2)} 1 :- initialstate(A,_,T).
+1 {starttime(A,T'+1): time(T'), T'>0, T'>=T, time(T'+2)} 1 :- initialstate(A,_,T).
 state(A,(P,D),T+1) :- initialstate(A,(P,D),_), starttime(A,T).
-state(A,(P,D),T+2) :- initialstate(A,(P,D),_), starttime(A,T).
 
 % an agent may take an allowed move if neither goal nor horizon is reached
 {state(A,((X+X',Y+Y'),D2),T+1): movement((X',Y'),D2), transition((X,Y),(D1,D2))} :- state(A,((X,Y),D1),T), time(T+1), not target(A,(X,Y),_).

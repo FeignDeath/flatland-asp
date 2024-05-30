@@ -1,6 +1,6 @@
 
 % startorder
-outputaction(A,2,T) :- starttime(A,T).
+outputaction(A,2,T) :- starttime(A,T+1).
 
 % all orders except the startorder are shifted as flatland has a delay of 1
 % if an agent stays at the same vertex for the first time a stop action is generated beforehand
