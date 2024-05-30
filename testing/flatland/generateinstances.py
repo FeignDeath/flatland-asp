@@ -2,6 +2,7 @@
 # basic
 import warnings
 from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import sparse_rail_generator
 # for running clingo
 import os
 import pickle
@@ -75,10 +76,12 @@ def parse():
     )
     parser.add_argument('--number', '-n', metavar='N', type=int,
                         help='Number of encodings to generate', required=True)
+    parser.add_argument('--cities', '-c', metavar='N', type=int,
+                        help='Number of starts and goals', default=0, required=False)
     parser.add_argument('--width', '-y', metavar='N', type=int,
-                        help='Width of the generated map (minimum 20x24)', required=True)
+                        help='Width of the generated map (minimum 24x24)', required=True)
     parser.add_argument('--height', '-x', metavar='N', type=int,
-                        help='Height of the generated map (minimum 20x24)', required=True)
+                        help='Height of the generated map (minimum 24x24)', required=True)
     parser.add_argument('--agents', '-a', metavar='N', type=int,
                         help='Number of trains in the encoding', required=True)
     parser.add_argument('--objects', '-o', metavar='<path>',
@@ -90,8 +93,8 @@ def parse():
         raise IOError("directory %s not found!" % args.objects)
     if not os.path.isdir(args.facts):
         raise IOError("directory %s not found!" % args.facts)
-    if args.width < 20:
-        raise IOError("width %s is less than 20!" % args.width)
+    if args.width < 24:
+        raise IOError("width %s is less than 24!" % args.width)
     if args.height < 24:
         raise IOError("height %s is less than 24!" % args.height)
     if args.agents < 1:
@@ -100,6 +103,8 @@ def parse():
         args.objects+="/"
     if args.facts[-1] != "/":
         args.facts+="/"
+    if args.cities < 2:
+        args.cities = int((args.width+args.height)/20)
     return args
 
 def main():
@@ -108,7 +113,7 @@ def main():
     try:
         args=parse()
         
-        dirname = f"{args.width:03d}" + "x" + f"{args.height:03d}" + "_" + f"{args.agents:03d}" + "/"
+        dirname = f"{args.width:03d}" + "x" + f"{args.height:03d}" + ":" + f"{args.cities:02d}" + "_" + f"{args.agents:03d}" + "/"
         if not os.path.isdir(args.objects + dirname):
             os.mkdir(args.objects + dirname)
         if not os.path.isdir(args.facts + dirname):
@@ -119,7 +124,7 @@ def main():
             
             filename = "ex" + f"{i:02d}"
             print("generating " + dirname + filename)
-            env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
+            env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities))
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
                 pickle.dump(env, file)
             obs = env.reset()

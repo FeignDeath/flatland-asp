@@ -9,6 +9,7 @@ import warnings
 import psutil
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_env import TrainState
+from flatland.envs.rail_generators import sparse_rail_generator
 
 
 def get_transitions(obsx):
@@ -201,6 +202,10 @@ def run_orders(env, plan):
 
         if done["__all__"]:
             return all(info["state"][i] == TrainState.DONE for i in info["state"]), t
+        
+        if t > 1000:
+            return False, t
+
 
 
 def test(args):
@@ -221,7 +226,7 @@ def test(args):
         
         warnings.filterwarnings("ignore")
         env = None
-        env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents)
+        env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities))
         obs = env.reset()
         horizon = env._max_episode_steps
         if not args.horizon: env._max_episode_steps = None
@@ -231,18 +236,10 @@ def test(args):
 
         if sat == "TIMEOUT":
             if success != 0:
-                return "SUCCESS", success, failure, ram_failure, sum_solving/(args.timeout-timeLeft), int(given_horizon/success), int(accumulated_horizon/success)
+                return "SUCCESS", success, failure, failure_reasons, sum_solving/(args.timeout-timeLeft), int(given_horizon/success), int(accumulated_horizon/success)
             else:
-                return "TIMEOUT", success, failure, ram_failure, 0, 0, 0
-        if sat == "MEMORY":
-            ram_failure += 1
-            failure += 1
-            consecutive_failures += 1
-            failure_reasons.append(sat)
-        if sat == "UNSATISFIABLE":
-            failure += 1
-            consecutive_failures += 1
-            failure_reasons.append(sat)
+                failure_reasons.append("TIMEOUT")
+                return "FAILURE", success, failure, failure_reasons, 0, 0, 0
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
             state, steps = run_orders(env,plan)
@@ -256,11 +253,14 @@ def test(args):
             else:
                 failure += 1
                 consecutive_failures += 1
-                failure_reasons.append(sat)
+                failure_reasons.append("PLAN_ERROR")
+        else:
+            failure += 1
+            consecutive_failures += 1
+            failure_reasons.append(sat)
 
         if consecutive_failures == args.failures:
-            most_frequent = max(set(failure_reasons), key=failure_reasons.count)
-            return most_frequent, success, failure, ram_failure, 0, 0, 0
+            return "FAILURE", success, failure, failure_reasons, 0, 0, 0
 
 
 def parse():
@@ -277,9 +277,11 @@ def parse():
                         help='Width of the flatland instances', default=40, required=False)
     parser.add_argument('--height', '-x', metavar='N', type=int,
                         help='Height of the flatland instances', default=40, required=False)
+    parser.add_argument('--cities', '-c', metavar='N', type=int,
+                        help='Number of starts and goals', default=0, required=False)
     parser.add_argument('--agents', '-a', metavar='N', type=int,
                         help='Amount of agents in the flatland instances', default=8, required=False)
-    parser.add_argument('--clingo', '-c', metavar='<path>',
+    parser.add_argument('--clingo', '-cl', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
     parser.add_argument('--output', '-o', metavar='<file>',
                         help='CSV file to store the Benchmarking results in', default="testing/log.csv", required=False)
@@ -303,14 +305,23 @@ def parse():
         raise IOError(f"memory {args.memory}GB is more than 80 percent of the available memory {psutil.virtual_memory().total/1024/1024/1024:.0f}GB")
     if args.encoding[-1] != "/":
         args.encoding+="/"
+    if args.cities < 2:
+        args.cities = int((args.width+args.height)/20)
 
     return args
 
 
-def write_output(args, r, s, f, rf, sol, gh, h):
+def write_output(args, r, s, f, df, sol, gh, h):
     file_exists = os.path.exists(args.output)
+
+    output_df = ""
+    for i in df:
+        output_df += i + ":"
+    df = output_df[0:-1]
+
+
     with open(args.output, "a", newline="") as csvfile:
-        fieldnames = ["Encoding", "Height", "Width", "Trains", "Result", "Success", "Failures", "RAM_Failures", "Solving Proportion", "Given Horizon", "Resulting Horizon"]
+        fieldnames = ["Encoding", "Height", "Width", "Cities", "Trains", "Result", "Success", "Failures", "Detailed Failures", "Solving Proportion", "Given Horizon", "Resulting Horizon"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
 
         if not file_exists:
@@ -320,51 +331,31 @@ def write_output(args, r, s, f, rf, sol, gh, h):
             "Encoding": args.encoding,
             "Height": args.height,
             "Width": args.width,
+            "Cities": args.cities,
             "Trains": args.agents,
             "Result": r,
             "Success": s,
             "Failures": f,
-            "RAM_Failures": rf,
+            "Detailed Failures": df,
             "Solving Proportion": sol,
             "Given Horizon": gh,
             "Resulting Horizon": h
         })
 
 
-# Checs whether the csv entrie already exists
-def check_csv(file_path, encoding, height, width, trains):
-    if not os.path.exists(file_path):
-        return False
-
-    with open(file_path, mode="r") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            if (row['Encoding'] == encoding and 
-                row['Height'] == str(height) and 
-                row['Width'] == str(width) and 
-                row['Trains'] == str(trains)):
-                return True
-    
-    return False
-    
-
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
-    try:
-        args=parse()
-        if check_csv(args.output, args.encoding, args.height, args.width, args.agents):
-            sys.stdout.write("%sx%s:%s exists already in %s for %s \n" % (args.width, args.height, args.agents, args.output, args.encoding))
-            return 0
-        sys.stdout.write("Running %sx%s:%s via %s for %d seconds \n" % (args.width, args.height, args.agents, args.encoding, args.timeout))
-        r, s, f, rf, sol, gh, h = test(args)
-        print()
-        write_output(args, r, s, f, rf, sol, gh, h)
+    # try:
+    args=parse()
+    sys.stdout.write("Running %sx%s:%s_%s via %s for %d seconds \n" % (args.width, args.height, args.cities, args.agents, args.encoding, args.timeout))
+    r, s, f, df, sol, gh, h = test(args)
+    print()
+    write_output(args, r, s, f, df, sol, gh, h)
 
-    except Exception as e:
-        sys.stderr.write("ERROR: %s\n" % str(e))
-        return 1
+    # except Exception as e:
+    #     sys.stderr.write("ERROR: %s\n" % str(e))
+    #     return 1
 
 if __name__ == '__main__':
     sys.exit(main())

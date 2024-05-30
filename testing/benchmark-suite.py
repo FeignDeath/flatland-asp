@@ -7,9 +7,12 @@ import sys
 
 
 # Checs whether the csv entrie already exists
-def check_exists(file_path, encoding, size, trains):
+def check_exists(file_path, encoding, size, cities, trains):
     if not os.path.exists(file_path):
         return False
+
+    if cities < 2:
+        cities = int(size/10)
 
     with open(file_path, mode="r") as file:
         reader = csv.DictReader(file)
@@ -18,16 +21,20 @@ def check_exists(file_path, encoding, size, trains):
             if (row['Encoding'] == encoding and 
                 row['Height'] == str(size) and 
                 row['Width'] == str(size) and 
+                row['Cities'] == str(cities) and
                 row['Trains'] == str(trains)):
                 return True
     
     return False
 
 
-def check_success(file_path, encoding, size, trains):
+def check_success(file_path, encoding, size, cities, trains):
     if not os.path.exists(file_path):
         return False
     
+    if cities < 2:
+        cities = int(size/10)
+
     with open(file_path, mode="r") as file:
         reader = csv.DictReader(file)
 
@@ -35,6 +42,7 @@ def check_success(file_path, encoding, size, trains):
             if (row['Encoding'] == encoding and 
                 row['Height'] == str(size) and 
                 row['Width'] == str(size) and 
+                row['Cities'] == str(cities) and
                 row['Trains'] == str(trains) and
                 row['Result'] == "SUCCESS"):
                 return True
@@ -45,19 +53,20 @@ def check_success(file_path, encoding, size, trains):
 def test(args):
     for e in args.encodinglist:
         for s in args.sizelist:
-            c = True
-            a = 5
-            while(c):
-                if not check_exists(args.log, e, s, a):
-                    command = f"python testing/benchmark-flatland.py -e {e} -x {s} -y {s} -m {args.memory} -f {args.failures} -t {args.timeout} -a {a}"
-                    if args.horizon:
-                        command += " --horizon"
-                    os.system(command)
+            for c in args.citylist:
+                check = True
+                a = 5
+                while(check):
+                    if not check_exists(args.log, e, s, c, a):
+                        command = f"python testing/benchmark-flatland.py -e {e} -x {s} -y {s} -c {c} -m {args.memory} -f {args.failures} -t {args.timeout} -a {a}"
+                        if args.horizon:
+                            command += " --horizon"
+                        os.system(command)
 
-                if check_success(args.log, e, s, a):
-                    a += 5
-                else:
-                    c = False
+                    if check_success(args.log, e, s, c, a):
+                        a += 5
+                    else:
+                        check = False
     
     return True
 
@@ -75,7 +84,9 @@ def parse():
                         help='Maximum RAM allocated for solving in Gigabytes', default=8, required=False)
     parser.add_argument('--sizelist', '-s', metavar='N', type=str,
                         help='Comma separated list of sizes used as width and height of the flatland instances', default="40", required=False)
-    parser.add_argument('--clingo', '-c', metavar='<path>',
+    parser.add_argument('--citylist', '-c', metavar='N', type=str,
+                        help='Comma separated list of number of starts and goals of the flatland instances', default="0", required=False)
+    parser.add_argument('--clingo', '-cl', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
     parser.add_argument('--log', '-l', metavar='<file>',
                         help='CSV file where the benchmarking results are stored', default="testing/log.csv", required=False)
@@ -98,6 +109,8 @@ def parse():
         if int(s) < 24:
             raise IOError("size %s is less than 24!" % args.width)
     args.sizelist = list(map(int, args.sizelist.split(",")))
+
+    args.citylist = list(map(int, args.citylist.split(",")))
 
     if args.memory*1024*1024*1024 > 0.8*psutil.virtual_memory().total:
         raise IOError(f"memory {args.memory}GB is more than 80 percent of the available memory {psutil.virtual_memory().total/1024/1024/1024:.0f}GB")
