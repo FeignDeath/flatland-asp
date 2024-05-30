@@ -226,7 +226,7 @@ def test(args):
         
         warnings.filterwarnings("ignore")
         env = None
-        env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities))
+        env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities, max_rail_pairs_in_city = 1))
         obs = env.reset()
         horizon = env._max_episode_steps
         if not args.horizon: env._max_episode_steps = None

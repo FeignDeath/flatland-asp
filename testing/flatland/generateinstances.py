@@ -124,7 +124,7 @@ def main():
             
             filename = "ex" + f"{i:02d}"
             print("generating " + dirname + filename)
-            env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities))
+            env = RailEnv(width=args.width, height=args.height, number_of_agents=args.agents, rail_generator=sparse_rail_generator(max_num_cities=args.cities, max_rail_pairs_in_city = 1))
             with open(args.objects + dirname + filename + ".pkl", "wb") as file:
                 pickle.dump(env, file)
             obs = env.reset()
