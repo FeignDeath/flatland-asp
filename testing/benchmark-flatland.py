@@ -346,16 +346,16 @@ def write_output(args, r, s, f, df, sol, gh, h):
 def main():
     if sys.version_info < (3, 5):
         raise SystemExit('Sorry, this code need Python 3.5 or higher')
-    # try:
-    args=parse()
-    sys.stdout.write("Running %sx%s:%s_%s via %s for %d seconds \n" % (args.width, args.height, args.cities, args.agents, args.encoding, args.timeout))
-    r, s, f, df, sol, gh, h = test(args)
-    print()
-    write_output(args, r, s, f, df, sol, gh, h)
+    try:
+        args=parse()
+        sys.stdout.write("Running %sx%s:%s_%s via %s for %d seconds \n" % (args.width, args.height, args.cities, args.agents, args.encoding, args.timeout))
+        r, s, f, df, sol, gh, h = test(args)
+        print()
+        write_output(args, r, s, f, df, sol, gh, h)
 
-    # except Exception as e:
-    #     sys.stderr.write("ERROR: %s\n" % str(e))
-    #     return 1
+    except Exception as e:
+        sys.stderr.write("ERROR: %s\n" % str(e))
+        return 1
 
 if __name__ == '__main__':
     sys.exit(main())
