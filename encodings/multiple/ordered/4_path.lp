@@ -1,3 +1,5 @@
+%% generating a path from the moveset before
+
 % start vertex at earliest possible timestep
 state(A,"Start",T) :- T = #max{T': initialstate(A,_,T'); 1}, agent(A).
 

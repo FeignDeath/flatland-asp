@@ -1,3 +1,8 @@
+% An encoding building upon the grid encoding. Grounds every timestep separately and checks whethere the problem is solvable before the next one.
+%   - enforces swap and vertex conflicts
+%   - personal horizons are not met
+%   - finds optimal general horizon
+
 #include <incmode>.
 #const imin = 1.
 
