@@ -1,3 +1,8 @@
+% An encoding based on the graph encoding. The speed of pathgeneration is used to generate any set of paths.
+%   - enforces swap and vertex conflicts
+%   - no horizons at all, since reintroducing them would blow up the grounding
+%   - fast to prove solvability of a problem if the horizon is ignored
+
 #include "0_input.lp".
 #include "1_graph.lp".
 #include "2_path.lp".

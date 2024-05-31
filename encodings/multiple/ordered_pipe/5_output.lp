@@ -1,4 +1,5 @@
-% output needs to be swapped
+%% transforms path into actions for flatland
+% ignores delays, as every agent faces them
 
 % startorder
 outputaction(A,2,T) :- state(A,"Start",T), not state(A,"Start",T+1).
