@@ -76,11 +76,11 @@ Benchmarking Suite
 - checks whether output already exists
 - runs instances with increased trains until either unsatisfiability, the time limit or the memory limit is hit
 ```
-python testing/benchmark-suite.py -e encodings/multiple/grid/,encodings/multiple/incremental -s 50,100,200 -c 0,2 -t 600
+python testing/benchmark-suite.py -e encodings/multiple/grid/,encodings/multiple/incremental -s 50,100,200 -c 2,0,1000 -t 600
 ```
 - e is a comma separated list of encodings in the above style
 - s is a comma separated list of instance sizes to test (for example 50 for 50x50)
-- c is a comma separated list of the number of cities to test (0, refers to the default of size/10)
+- c is a comma separated list of the number of cities to test (0 is interpreted as size/10, 1000 is to generate as many cities as possible to get dense instances)
 - it tests all combinations of e,s and c and passes them together with the following flags to the benchmark-flatland.py
     - t sets timout
     - m sets the ram limit

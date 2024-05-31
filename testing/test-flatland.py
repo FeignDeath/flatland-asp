@@ -127,9 +127,9 @@ def facts_to_flatland(atoms):
 
 
 def run_orders(env, plan):
-    t = 0
-
     while True:
+        t = env._elapsed_steps
+
         dictionary = {}
         for i in plan:
             if t in plan[i]: value = plan[i][t]
@@ -138,10 +138,14 @@ def run_orders(env, plan):
     
         obs, rew, done, info = env.step(dictionary)
 
-        t += 1
-
         if done["__all__"]:
-            return all(info["state"][i] == TrainState.DONE for i in info["state"]), t
+            if all(info["state"][i] == TrainState.DONE for i in info["state"]) & sum(rew.values()) == 0:
+                return True, t
+            else:
+                return False, t
+
+        if t>1000:
+            return False, t
 
 
 def process_file(filepath, args):
