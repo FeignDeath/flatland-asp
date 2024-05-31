@@ -1,5 +1,6 @@
 % A simple encoding modelling paths as timestepped states.
 %   - enforces personal horizons, swap and vertex conflicts
+
 #include "0_input.lp".
 #include "1_path.lp".
 #include "2_conditions.lp".
