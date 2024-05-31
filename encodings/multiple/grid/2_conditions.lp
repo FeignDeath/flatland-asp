@@ -1,11 +1,11 @@
-%% ensuring the path reaches the goal and conflicts are forbidden
+%% ensuring goals are reached and conflicts enforced
 
-% the goal must be reached in time
+% goal must be reached
 goal(A) :- state(A,(P,_),_), target(A,P,_).
 :- agent(A), not goal(A).
 
-% collisions are forbidden
+% no vertex conflicts
 :- state(A1,(P,_),T), state(A2,(P,_),T), A1<A2.
 
-% swapping is forbidden
+% no swap conflicts
 :- state(A1,(P1,_),T), state(A1,(P2,_),T+1), state(A2,(P2,_),T), state(A2,(P1,_),T+1), A1<A2.
