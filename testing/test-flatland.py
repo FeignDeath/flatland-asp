@@ -172,6 +172,7 @@ def process_file(filepath, args):
             obj = pickle.load(f)
             warnings.filterwarnings("ignore")
             obj.reset()
+            if not args.horizon: obj._max_episode_steps = None
             orders = facts_to_flatland(atoms)
             state, steps = run_orders(obj, orders, args.horizon)
             if state:
