@@ -1,8 +1,5 @@
 %% conversion of input atoms
 
-% allowed timesteps limited by latest arrival time
-% time(0..T) :- target(_,_,T).
-
 % agents
 agent(A) :- initialstate(A,_,_).
 
