@@ -1,3 +1,5 @@
+%% representation of the graph
+
 % vertices
 vertex((P,D)) :- transition(P,(D,_)).
 % edges

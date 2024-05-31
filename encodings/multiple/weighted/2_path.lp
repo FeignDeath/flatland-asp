@@ -1,3 +1,5 @@
+%% generating a path
+
 % spawning of the train
 1 {starttime(A,T'): T'=T..L-1, T'>0} 1 :- initialstate(A,_,T), horizon(A,L).
 state(A,V,T+1) :- initialstate(A,V,_), starttime(A,T).

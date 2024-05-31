@@ -1,4 +1,4 @@
-% transforming the extracted atoms
+%% conversion of input atoms
 
 % agents
 agent(A) :- initialstate(A,_,_).
