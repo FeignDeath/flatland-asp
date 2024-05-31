@@ -126,7 +126,8 @@ def facts_to_flatland(atoms):
     return dictionaries
 
 
-def run_orders(env, plan):
+def run_orders(env, plan, horizon):
+    # print(horizon)
     while True:
         t = env._elapsed_steps
 
@@ -139,7 +140,7 @@ def run_orders(env, plan):
         obs, rew, done, info = env.step(dictionary)
 
         if done["__all__"]:
-            if all(info["state"][i] == TrainState.DONE for i in info["state"]) & sum(rew.values()) == 0:
+            if all(info["state"][i] == TrainState.DONE for i in info["state"]) and (sum(rew.values()) == 0 or horizon!=True):
                 return True, t
             else:
                 return False, t
@@ -172,7 +173,7 @@ def process_file(filepath, args):
             warnings.filterwarnings("ignore")
             obj.reset()
             orders = facts_to_flatland(atoms)
-            state, steps = run_orders(obj, orders)
+            state, steps = run_orders(obj, orders, args.horizon)
             if state:
                 print(" success in " + str(t*1000)[:7] + " ms")
             else:
@@ -219,6 +220,8 @@ def parse():
                         help='Directory of the facts', default="testing/flatland/facts/", required=False)
     parser.add_argument('--objects', '-s', metavar='<path>',
                         help='Directory of the flatland objects to solve on', default="testing/flatland/objects/", required=False)
+    parser.add_argument('--horizon', '-ho', action=argparse.BooleanOptionalAction,
+                        help='Sets whether a horizon should be used', required=False)
     parser.add_argument('--clingo', '-c', metavar='<path>',
                         help='Clingo to use', default="clingo", required=False)
     parser.add_argument('--processes', '-p', metavar='N', type=int,

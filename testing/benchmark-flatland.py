@@ -186,7 +186,7 @@ def facts_to_flatland(atoms):
     return dictionaries
 
 
-def run_orders(env, plan):
+def run_orders(env, plan, horizon):
     while True:
         t = env._elapsed_steps
 
@@ -199,7 +199,7 @@ def run_orders(env, plan):
         obs, rew, done, info = env.step(dictionary)
 
         if done["__all__"]:
-            if all(info["state"][i] == TrainState.DONE for i in info["state"]) & sum(rew.values()) == 0:
+            if all(info["state"][i] == TrainState.DONE for i in info["state"]) and (sum(rew.values()) == 0 or horizon!=True):
                 return True, t
             else:
                 return False, t
@@ -242,7 +242,7 @@ def test(args):
                 return "FAILURE", success, failure, failure_reasons, 0, 0, 0
         if sat == "SATISFIABLE":
             plan = facts_to_flatland(atoms)
-            state, steps = run_orders(env,plan)
+            state, steps = run_orders(env,plan,args.horizon)
             if state:
                 success += 1
                 timeLeft = timeLeft - time
