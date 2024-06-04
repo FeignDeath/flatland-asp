@@ -1,4 +1,4 @@
-%% generating a path
+%% generating timesteped paths through the graph
 
 % choose a time for an agent to spawn, whereat he appears in the next timestep
 1 {starttime(A,T'): T'=T..L-1, T'>0} 1 :- initialstate(A,_,T), horizon(A,L).
