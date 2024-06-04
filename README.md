@@ -46,7 +46,7 @@ python testing/flatland/generateinstances.py -n 10 -x 24 -y 24 -a 4
 
 Autotesting encodings for maps and facts
 ```
-python testing/test-flatland.py -e encodings/multiple/grid/combined.lp
+python testing/test-flatland.py -e encodings/multiple/grid/
 ```
 - e specifies the encoding to be tested
 - time and memory can be limited via -t and -m and are applied per instance
