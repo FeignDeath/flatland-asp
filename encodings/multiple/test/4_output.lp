@@ -1,7 +1,11 @@
 %% converting the atoms for the import into flatland
+% ignores delays, as every agent faces them
+
+% conversion into states for output generation
+state(A,V,T+N) :- assign(A,T,I), path(I,N,V).
 
 % startorder
-outputaction(A,2,T) :- starttime(A,T).
+outputaction(A,2,T) :- assign(A,T+1,_).
 
 % if an agent stays at the same vertex for the first time a stop action is generated
 outputaction(A,4,T) :- state(A,V,T), state(A,V,T+1), not state(A,V,T-1), state(A,_,T-1).
@@ -20,3 +24,5 @@ outputaction(A,2,T) :- state(A,V,T-1), state(A,V,T), not state(A,V,T+1),
     state(A,_,T+1). % no order necessary if stopped state is the goal state
 
 #show outputaction/3.
+% #show state(B,C) : state(A,B,C).
+% #show.
