@@ -260,7 +260,10 @@ def test(args):
             failure_reasons.append(sat)
 
         if consecutive_failures == args.failures:
-            return "FAILURE", success, failure, failure_reasons, 0, 0, 0
+            if success != 0:
+                return "SUCCESS", success, failure, failure_reasons, sum_solving/(args.timeout-timeLeft), int(given_horizon/success), int(accumulated_horizon/success)
+            else:
+                return "FAILURE", success, failure, failure_reasons, 0, 0, 0
 
 
 def parse():
