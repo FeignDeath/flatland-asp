@@ -6,10 +6,8 @@
 #include "2_path.lp".
 #include "3_conditions.lp".
 #include "4_path.lp".
-#include "5_output.lp".
 
-#show starttime/2.
 #show state/3.
 #show left/2.
 #show right/2.
-#show edge/2.
+#show transition/2.
