@@ -8,7 +8,7 @@ edge(((X,Y),D1),((X+X',Y+Y'),D2)) :- transition((X,Y),(D1,D2)), movement((X',Y')
 % identify choiceless paths
 edge((P,D),V,1,V,(P,D)) :- edge((P,D),V), 3 {edge((P,_),_)}.
 edge(U,V,1,V,U) :- edge(U,V), initialstate(_,U,_).
-edge(U,W,N+1,F,(P,D)) :- edge(U,(P,D),N,F,_), edge((P,D),W), {edge((P,_),_)} 2, not initialstate(_,(P,D),_), not target(_,P,_).
+edge(U,W,N+1,F,(P,D)) :- edge(U,(P,D),N,F,_), edge((P,D),W), {edge((P,_),_)} 2, not initialstate(_,(P,_),_), not target(_,P,_).
 remove(U,(P,D),N) :- edge(U,(P,D),N,_,_), {edge((P,_),_)} 2, not initialstate(_,(P,D),_), not target(_,P,_).
 
 % generating weighted edge
