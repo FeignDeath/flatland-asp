@@ -256,10 +256,10 @@ def test(args):
                 failure_reasons.append("PLAN_ERROR")
         else:
             failure += 1
-            consecutive_failures += 1
+            consecutive_failures += 0.5
             failure_reasons.append(sat)
 
-        if consecutive_failures == args.failures:
+        if consecutive_failures >= args.failures:
             if success != 0:
                 return "SUCCESS", success, failure, failure_reasons, sum_solving/(args.timeout-timeLeft), int(given_horizon/success), int(accumulated_horizon/success)
             else:
