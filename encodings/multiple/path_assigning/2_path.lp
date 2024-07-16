@@ -1,6 +1,6 @@
 %% step(identifier,stepnumber,position), identifier is start + number
 
-% detects whether string contains a substring to check whether a field has been passed
+% detects whether string contains a substring to check whether a cell has been passed
 #script (python)
 import clingo
 
