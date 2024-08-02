@@ -7,7 +7,7 @@ This repository is a collection of tools and encodings used to extract and solve
 Detailed explanations can be found in the folders.
 - [encodings](encodings) contains encodings I implemented for this project
 - [testing](testing) contains tools for testing, evaluation
-- [example.ipynb](example.ipynb) is an example of what I did to understand the steps undertaken
+- [example.ipynb](example.ipynb) is an example of what I did to understand the steps undertaken and of how Flatland works
 
 # Installation
 This is a suggested order, to set up the environment.
