@@ -1,0 +1,62 @@
+This folder collects tools used for testing and evaluation. The following tools are provided:
+
+# Testing flatland
+## [Map generator](flatland/generateinstances.py)
+- generates maps and facts from flatland
+```
+python testing/flatland/generateinstances.py -n 10 -x 24 -y 24 -a 4
+```
+- *-n* specifies the amount of maps generated
+- *-x* and *-y* define the size of each map and require a minimum of 24x24
+- *-c* specifies the amount of cities on the map
+    - they can't be placed indefinitely close and so (x+y)/20 is used as the default
+- *-a* specifies the amount of trains for each map
+- the script defaults 'testing/flatland/objects' as the directory for the flatland map objects and 'testing/flatland/facts' as the directory for the facts, both can be specified via *o-* and *-f*
+
+## [Automated testing](test-flatland.py)
+- automatically tests an encoding on maps and facts
+```
+python testing/test-flatland.py -e encodings/multiple/grid/
+```
+- *-e* specifies the encoding to be tested
+- time and memory can be limited via *-t* and *-m* and are applied per instance
+- *-p* allows for parallelization and specifies how many processes are run parallel
+- per default the script specifies 'testing/flatland/objects' as the directory for the flatland map objects and 'testing/flatland/facts' as the directory for the facts, both can be specified via *-o* and *-f*
+    - facts and objects need the same structure within their folders
+- unsat results might be unsolvable
+- *-ho* is a flag which activates the enforcement of individual horizon
+
+# Benchmarking
+## [Single Benchmarking](benchmark-flatland.py)
+- checks how many random instances can be solved in given time
+```
+python testing/benchmark-flatland.py -e encodings/multiple/grid/
+```
+- *-e* specifies the directory of the encodings to be tested
+    - encodings need to be in the form "stepn.lp"
+    - step1.lp is solved and its output piped into step2.lp and so on
+    - it also works with step1.py and so on, but requires, that they return an JSON in similar fashion as Clingo would and return Clingo exit codes
+- *-x* and *-y* define the size of each map and require a minimum of 24x24
+- *-c* specifies the amount of cities on the map they can't be closed indefinitely close and so (x+y)/20 is used as the default
+- *-t* sets timeout
+- *-m* sets the ram limit
+- *-o* specifies a CSV file to store results in
+- *-f* specifies at how many consecutive failures the benchmarking should stop
+- *-ho* is a flag which activates the enforcement of individual horizon
+
+## [Benchmarking Suite](benchmark-suite.py)
+- bulk runs the single benchmark, for lists of encodings, sizes and cities
+- checks whether output already exists (therefore can be run partially)
+- repeats single benchmarks with increased trains until either unsatisfiability, the time limit or the memory limit is hit
+```
+python testing/benchmark-suite.py -e encodings/multiple/grid/,encodings/multiple/incremental -s 50,100,200 -c 2,0,1000 -t 600
+```
+- *-e* is a comma separated list of encodings in the above style
+- *-s* is a comma separated list of instance sizes to test (for example 50 for 50x50)
+- *-c* is a comma separated list of the number of cities to test (0 is interpreted as size/10, 1000 is to generate as many cities as possible to get dense instances)
+- it tests all combinations of e,s and c and passes them together with the following flags to the benchmark-flatland.py
+    - *-t* sets timout
+    - *-m* sets the ram limit
+    - *-o* specifies a csv file to store results in
+    - *-f* specifies at how many consecutive failures the benchmarking should stop
+    - *-ho* is a flag which activates the enforcement of individual horizon
