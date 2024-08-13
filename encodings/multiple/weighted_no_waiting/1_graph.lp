@@ -5,11 +5,17 @@ vertex((P,D)) :- transition(P,(D,_)).
 % edges
 edge(((X,Y),D1),((X+X',Y+Y'),D2)) :- transition((X,Y),(D1,D2)), movement((X',Y'),D2).
 
+% new vertices
+weighted_vertex((P,D)) :- vertex((P,D)), 3 {vertex((P,_))}.
+weighted_vertex(U) :- vertex((U)), initialstate(_,U,_).
+weighted_vertex((P,D)) :- vertex((P,D)), target(_,P,_).
+
 % identify choiceless paths
-edge((P,D),V,1,V,(P,D)) :- edge((P,D),V), 3 {edge((P,_),_)}.
-edge(U,V,1,V,U) :- edge(U,V), initialstate(_,U,_).
-edge(U,W,N+1,F,(P,D)) :- edge(U,(P,D),N,F,_), edge((P,D),W), {edge((P,_),_)} 2, not initialstate(_,(P,_),_), not target(_,P,_).
-remove(U,(P,D),N) :- edge(U,(P,D),N,_,_), {edge((P,_),_)} 2, not initialstate(_,(P,D),_), not target(_,P,_).
+% edge(from,to,stepstaken,first after from,first before to)
+edge(U,V,1,V,U) :- weighted_vertex(U), edge(U,V).
+
+edge(U,W,N+1,F,V) :- edge(U,V,N,F,_), edge(V,W), not weighted_vertex(V).
+remove(U,V,N) :- edge(U,V,N,_,_), not weighted_vertex(V).
 
 % generating weighted edge
 % the edge goes from U to V and has a weight of N
