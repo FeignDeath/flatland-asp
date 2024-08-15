@@ -5,10 +5,7 @@
 outputaction(A,2,T) :- starttime(A,T).
 
 % if an agent stays at the same vertex for the first time a stop action is generated
-outputaction(A,4,T) :- not state(A,P,T-1), state(A,P,T), state(A,P,T+1), state(A,_,T-1).
-
-% if the agent stays longer than one timesteps at the start a stop action is necessary after spawning or else he moves automatically
-outputaction(A,4,T) :- not state(A,_,T-1), state(A,P,T), state(A,P,T+1).
+outputaction(A,4,T) :- not state(A,P,T-1), state(A,P,T), state(A,P,T+1).
 
 % actions 1 and 3 (left and right turns) are only necessary, if multiple options exist otherwise the train follows the rails
 outputaction(A,1,T) :- state(A,(P,D1),T), state(A,(_,D2),T+1), left(D1,D2) , 2 {transition(P,(D1,_))}.

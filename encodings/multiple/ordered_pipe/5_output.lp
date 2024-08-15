@@ -5,7 +5,7 @@
 outputaction(A,2,T) :- state(A,"Start",T), not state(A,"Start",T+1).
 
 % if an agent stays at the same vertex for the first time a stop action is generated
-outputaction(A,4,T) :- not state(A,P,T-1), state(A,P,T), state(A,P,T+1), not state(A,"Start",T), P!="Start".
+outputaction(A,4,T) :- not state(A,P,T-1), state(A,P,T), state(A,P,T+1), P!="Start".
 
 % if the agent stays longer than two timesteps at the start a stop action is necessary after spawning
 outputaction(A,4,T) :- state(A,"Start",T-1), state(A,P,T), state(A,P,T+1), P!="Start".
