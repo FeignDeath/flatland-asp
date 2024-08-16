@@ -1,5 +1,9 @@
 This directory collects encodings, which implement different approaches to solving Flatland instances.
 
+The different encodings are split into subdirectories. They consist of multiple steps which need to be piped. The first step also contains a short description.
+
+They all fulfill the following requirements. Other encodings need to fulfill them as well, to be used by the testing tools provided by [testing](../testing).
+
 # Requirements
 
 ## Inputs
